@@ -1,6 +1,8 @@
 import pygame
 import random
 
+# voici un commentaire pour tester le push
+
 # Constantes
 GRID_SIZE = 8
 CELL_SIZE = 60
