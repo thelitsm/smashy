@@ -2,7 +2,7 @@ import pygame
 import random
 
 # Constantes
-GRID_SIZE = 8
+GRID_SIZE = 12
 CELL_SIZE = 60
 WIDTH = GRID_SIZE * CELL_SIZE
 HEIGHT = GRID_SIZE * CELL_SIZE
@@ -12,6 +12,9 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
+RIVER_BLUE = (173,216,230)   #ajout de la couleur de l'eau pour la carte du jeu
+GROUND_BROWN = (165,42,42)   #ajout de la couleur des obstacles montagneux) pour la carte du jeu
+VALLEY_GREEN =(144,238,144) #ajout de la couleur de l'herbe(le sol) pour la carte 
 
 
 class Unit:
@@ -44,7 +47,7 @@ class Unit:
         Dessine l'unité sur la grille.
     """
 
-    def __init__(self, image_path, x, y, health, attack_power, team, unit_type, speed, defense):
+    def __init__(self, image_path, x, y, health, attack_power, team, walk_on_wall, walk_on_water, unit_type, speed, defense):
         """
         Construit une unité avec des attributs spécifiques.
         """
@@ -58,6 +61,9 @@ class Unit:
         self.defense = defense  # Réduction des dégâts
         self.is_selected = False
         self.max_health = health
+        self.walk_on_wall = walk_on_wall
+        self.walk_on_water = walk_on_water
+
         # Charger l'image avec gestion des erreurs
         try:
             self.image = pygame.image.load(image_path)
@@ -167,8 +173,8 @@ class Enemy(Unit):
     Classe pour représenter un ennemi.
     Hérite de la classe Unit.
     """
-    def __init__(self, image_path, x, y, health, attack_power, unit_type, speed, defense):
-        super().__init__(image_path, x, y, health, attack_power, 'enemy', unit_type, speed, defense)
+    def __init__(self, image_path, x, y, health, attack_power, walk_on_wall, walk_on_water, unit_type, speed, defense):
+        super().__init__(image_path, x, y, health, attack_power, 'enemy', walk_on_wall, walk_on_water, unit_type, speed, defense)
 
     def use_special(self, target):
         """
@@ -186,3 +192,21 @@ class Enemy(Unit):
             target.health -= 7  # Dégâts puissants
             self.health -= 2  # Subit un contrecoup
 
+class RangedUnit(Unit):
+    def __init__ (self, x, y, health, attack_power, team, range,walk_on_wall,walk_on_water):
+        super().__init__(x, y,health,attack_power,team,walk_on_wall,walk_on_water)
+        self.range = range
+
+    def attack(self, target):
+        """Attaque une unité cible."""
+        if abs(self.x - target.x) <= range or abs(self.y - target.y) <= range:
+            target.health -= self.attack_power
+
+    def draw(self, screen):
+        """Affiche l'unité sur l'écran."""
+        color = BLUE if self.team == 'player' else RED
+        if self.is_selected:
+            pygame.draw.rect(screen, GREEN, (self.x * CELL_SIZE,
+                             self.y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+        pygame.draw.circle(screen, color, (self.x * CELL_SIZE + CELL_SIZE //
+                           2, self.y * CELL_SIZE + CELL_SIZE // 2), CELL_SIZE // 3)
