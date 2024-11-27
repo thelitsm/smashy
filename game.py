@@ -1,6 +1,5 @@
 import pygame
 import random
-import os
 
 from unit import *
 from tile import *
@@ -21,15 +20,15 @@ class Game:
         BASE_PATH_CARACTERS = 'assets/persos/'
 
         player_units = [
-            Unit(BASE_PATH_CARACTERS + 'banane_pirate.png', 0, 0, 20, 5, 'player', False, False, 'Banane Pirate', speed=2, defense=3),
-            Unit(BASE_PATH_CARACTERS + 'jus_orange.png', 1, 0, 15, 3, 'player', False, False, 'Jus d\'Orange', speed=2, defense=2),
-            Unit(BASE_PATH_CARACTERS + 'hamster_gangster.png', 2, 0, 10, 4, 'player', False, False, 'Hamster Gangster', speed=3, defense=1)
+            Unit(BASE_PATH_CARACTERS + 'banane_pirate.png', 0, 2,'player', 10, False, False, 'Banane Pirate', speed=2, attack_power=2, defense=2),
+            Unit(BASE_PATH_CARACTERS + 'jus_orange.png', 1, 2,'player', 10, False, False, 'Jus d\'Orange', speed=1, attack_power=1, defense=4),
+            Unit(BASE_PATH_CARACTERS + 'hamster_gangster.png', 0, 3,'player', 15, False, False, 'Hamster Gangster', speed=1,attack_power=3, defense=2)
         ]
 
         enemy_units = [
-            Enemy(BASE_PATH_CARACTERS + 'bonbon_contamine.png', 6, 6, 10, 3, False, False, 'Bonbon Contaminé', speed=1, defense=0),
-            Enemy(BASE_PATH_CARACTERS + 'meringuich_toxique.png', 7, 6, 15, 2,False, False, 'Gâteau Zombie', speed=1, defense=2),
-            Enemy(BASE_PATH_CARACTERS + 'sucette_volante.png', 5, 5, 8, 5,False, False, 'Sucette Volante', speed=2, defense=1)
+            Unit(BASE_PATH_CARACTERS + 'bonbon_contamine.png', 16, 16,'enemy', 10, False, False, 'Bonbon Contaminé', speed=1, attack_power=2, defense=1),
+            Unit(BASE_PATH_CARACTERS + 'meringuich_toxique.png', 15, 16,'enemy', 15, False, False, 'Gâteau Zombie', speed=1, attack_power=2, defense=1),
+            Unit(BASE_PATH_CARACTERS + 'sucette_volante.png', 16, 15,'enemy', 10, False, False, 'Sucette Volante', speed=3, attack_power=2, defense=1)
         ]
 
         self.player_team = Team('Player', player_units)
@@ -40,52 +39,65 @@ class Game:
 
     def generate_map(self):
         self.map = []
+
+        # mise en place de la map en arrière plan
+        self.background_image = pygame.image.load('assets/game_map.png')
+        self.background_image = pygame.transform.scale(self.background_image, (WIDTH, HEIGHT))
+
+        # Définir les proportions pour les cases spéciales
+        special_tile_types = {
+            "infranchissable": 0.05,  # 5% de cases infranchissables
+            "vitaminé": 0.10,           # 10% de cases régénératrices
+            "huileuse": 0.07,        # 7% de cases glissantes
+            "mielleuse": 0.08        # 8% de cases collantes
+        }
+
+        # Parcourir chaque case de la grille
         for y in range(GRID_SIZE):
             row = []
             for x in range(GRID_SIZE):
-                try:
-                    if (x + y) % 5 == 0:
-                        image_path = "assets/cases/spatule.png"
-                        tile_type = "infranchissable"
-                    elif (x + y) % 4 == 0:
-                        image_path = "assets/cases/orange.png"
-                        tile_type = "sucré"
-                    elif (x + y) % 3 == 0:
-                        image_path = "assets/cases/huile.png"
-                        tile_type = "huileuse"
-                    elif (x + y) % 2 == 0:
-                        image_path = "assets/cases/miel.png"
-                        tile_type = "mielleuse"
-                    else:
-                        image_path = "assets/cases/normal.png"
-                        tile_type = "normal"
+                # Tirage aléatoire pour déterminer le type de la case
+                random_value = random.random()
+                tile_type = "normal"
+                image_path = "assets/cases/normal.png"      #case normale par défaut 
 
-                    if not os.path.exists(image_path):
-                        raise FileNotFoundError(f"Fichier manquant : {image_path}")
+                if random_value < special_tile_types["infranchissable"]:
+                    tile_type = "infranchissable"
+                    image_path = "assets/cases/spatule.png"
+                elif random_value < special_tile_types["infranchissable"] + special_tile_types["vitaminé"]:
+                    tile_type = "vitaminé"
+                    image_path = "assets/cases/orange.png"
+                elif random_value < (special_tile_types["infranchissable"] +
+                                    special_tile_types["vitaminé"] +
+                                    special_tile_types["huileuse"]):
+                    tile_type = "huileuse"
+                    image_path = "assets/cases/huile.png"
+                elif random_value < (special_tile_types["infranchissable"] +
+                                    special_tile_types["vitaminé"] +
+                                    special_tile_types["huileuse"] +
+                                    special_tile_types["mielleuse"]):
+                    tile_type = "mielleuse"
+                    image_path = "assets/cases/miel.png"
 
-                    row.append(Tile(x, y, tile_type, image_path))
+                # Ajouter la case à la ligne
+                row.append(Tile(x, y, tile_type, '0',image_path))
 
-                except FileNotFoundError as e:
-                    print(e)
-                    pygame.quit()
-                    exit()
-            self.map.append(row)
-
-    def apply_tile_effect(self, unit):
-        current_tile = self.map[unit.y][unit.x]
-        if current_tile.tile_type == "infranchissable":
-            print(f"{unit.unit_type} ne peut pas passer ici !")
-            return False
-        elif current_tile.tile_type == "sucré":
-            unit.health = min(unit.max_health, unit.health + 5)
-            print(f"{unit.unit_type} régénère de la santé !")
-        elif current_tile.tile_type == "huileuse":
-            print(f"{unit.unit_type} glisse sur la case !")
-            unit.move(random.choice([-1, 1]), random.choice([-1, 1]))
-        elif current_tile.tile_type == "mielleuse":
-            print(f"{unit.unit_type} est collé !")
-            unit.speed = 0
-        return True
+    
+    # def apply_tile_effect(self, unit):
+    #     current_tile = self.map[unit.y][unit.x]
+    #     if current_tile.tile_type == "infranchissable":
+    #         print(f"{unit.unit_type} ne peut pas passer ici !")
+    #         return False
+    #     elif current_tile.tile_type == "sucré":
+    #         unit.health = min(unit.max_health, unit.health + 5)
+    #         print(f"{unit.unit_type} régénère de la santé !")
+    #     elif current_tile.tile_type == "huileuse":
+    #         print(f"{unit.unit_type} glisse sur la case !")
+    #         unit.move(random.choice([-1, 1]), random.choice([-1, 1]))
+    #     elif current_tile.tile_type == "mielleuse":
+    #         print(f"{unit.unit_type} est collé !")
+    #         unit.speed = 0
+    #     return True
 
     def handle_player_turn(self):
         for selected_unit in self.player_team.units:
@@ -140,7 +152,8 @@ class Game:
                     self.action_messages.append(f"{target.unit_type} est vaincu !")
 
     def flip_display(self):
-        self.screen.fill(BLACK)
+        # Dessiner l'image de fond
+        self.screen.blit(self.background_image, (0, 0))
         for row in self.map:
             for tile in row:
                 tile.draw(self.screen)

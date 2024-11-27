@@ -2,8 +2,8 @@ import pygame
 import random
 
 # Constantes
-GRID_SIZE = 12
-CELL_SIZE = 60
+GRID_SIZE = 16
+CELL_SIZE = 50
 WIDTH = GRID_SIZE * CELL_SIZE
 HEIGHT = GRID_SIZE * CELL_SIZE
 FPS = 30
@@ -14,7 +14,7 @@ BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 RIVER_BLUE = (173,216,230)   #ajout de la couleur de l'eau pour la carte du jeu
 GROUND_BROWN = (165,42,42)   #ajout de la couleur des obstacles montagneux) pour la carte du jeu
-VALLEY_GREEN =(144,238,144) #ajout de la couleur de l'herbe(le sol) pour la carte 
+VALLEY_GREEN =(144,238,144)  #ajout de la couleur de l'herbe(le sol) pour la carte 
 
 
 class Unit:
@@ -47,31 +47,21 @@ class Unit:
         Dessine l'unité sur la grille.
     """
 
-    def __init__(self, image_path, x, y, health, attack_power, team, walk_on_wall, walk_on_water, unit_type, speed, defense):
-        """
-        Construit une unité avec des attributs spécifiques.
-        """
+    def __init__(self, image_path, x, y, team, health, walk_on_wall, walk_on_water, unit_type, speed, attack_power, defense):
+
+        self.image = pygame.transform.scale(pygame.image.load(image_path), (CELL_SIZE, CELL_SIZE))       # ajustement de la taille de l'image
         self.x = x
         self.y = y
-        self.health = health
-        self.attack_power = attack_power
         self.team = team  # 'player' ou 'enemy'
-        self.unit_type = unit_type  # Type de l'unité
-        self.speed = speed  # Vitesse de déplacement
-        self.defense = defense  # Réduction des dégâts
-        self.is_selected = False
-        self.max_health = health
+        self.health = health
         self.walk_on_wall = walk_on_wall
         self.walk_on_water = walk_on_water
-
-        # Charger l'image avec gestion des erreurs
-        try:
-            self.image = pygame.image.load(image_path)
-            self.image = pygame.transform.scale(self.image, (CELL_SIZE, CELL_SIZE))
-        except pygame.error as e:
-            print(f"Erreur lors du chargement de l'image : {image_path}")
-            self.image = pygame.Surface((CELL_SIZE, CELL_SIZE))
-            self.image.fill((255, 0, 0))  # Remplacer par une couleur rouge par défaut
+        self.unit_type = unit_type  # Type de l'unité
+        self.speed = speed  # Vitesse de déplacement
+        self.attack_power = attack_power
+        self.defense = defense  # Réduction des dégâts
+        self.is_selected = False
+        self.max_health = health # Vie maximale pour dessiner une barre de vie
 
     def move(self, dx, dy):
         """
@@ -82,29 +72,51 @@ class Unit:
                 self.x += dx
                 self.y += dy
 
-    def attack(self, target, is_special=False):
+    def attack(self, target, is_special, coeff_attaque):
         """
         Attaque une unité cible.
         """
         if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
             damage = self.attack_power
             if is_special:
-                damage *= 1.5  # multiplie les dégâts en mode spécial
+                damage *= coeff_attaque  # multiplie les dégâts en mode spécial
             target.health -= max(0, damage - target.defense)  # Réduction par la défense
 
     def use_special(self, target):
         """
         Utilise une compétence spéciale.
         """
-        if self.unit_type == 'Banane Pirate':
-            print("Banane Pirate utilise son Coup de Sabre Tropical !")
-            self.attack(target, is_special=True)
-        elif self.unit_type == 'Tasse de Café':
-            print("Tasse de Café lance du Café Revitalisant !")
-            target.health += 5  # Soigne un allié
+        if self.unit_type == 'Banane Planteur':
+            print("Banane Planteur utilise son Coup de Sabre Tropical !")
+            self.attack(target, is_special=True, coeff_attaque=1.2)
+        elif self.unit_type == 'Jus orange':
+            print("le jus d'orange lance des mini vitamines revitalisants !")
+            target.health += 5  # Soigne un allié et lui ajoute 5 hp
         elif self.unit_type == 'Hamster Gangster':
             print("Hamster Gangster utilise son ak-noisettes !")
-            self.attack(target, is_special=True)
+            self.attack(target, is_special=True, coeff_attaque=1.5)
+        # elif self.unit_type == 'Bonbon Contaminé':
+        #     print("Bonbon Contaminé explose dans un nuage de sucre !")
+        #     target.health -= 5  # Inflige des dégâts à la zone
+        #     self.health = 0  # Se détruit après l'explosion
+        elif self.unit_type == 'Meringuich Zombie':
+            print("Meringuich Zombie crache des meringues toxiques !")
+            target.health -= 3  # Inflige des dégâts à un seul ennemi
+        elif self.unit_type == 'Sucette Volante':
+            print("Sucette Volante fonce sur sa cible !")
+            target.health -= 7  # Dégâts puissants
+
+    def degat_zone(self, team, position_x, position_y, damage):
+        print(f"{self.unit_type} utilise une attaque de zone !")
+        for unit in team.units:
+            # Vérifie si l'unité est dans la zone de ±2 cases
+            if abs(unit.x - position_x) <= 2 and abs(unit.y - position_y) <= 2:
+                # Inflige les dégâts à l'unité
+                unit.health -= max(0, damage - unit.defense)
+                print(f"{unit.unit_type} a subi {max(0, damage - unit.defense)} dégâts !")
+                if unit.health <= 0:
+                    print(f"{unit.unit_type} est éliminé !")
+                    
 
     def draw(self, screen):
         """
@@ -112,24 +124,23 @@ class Unit:
         """
 
         # Couleur spécifique pour chaque type d'unité
-        if self.unit_type == 'Banane Pirate':
-            color = (255, 255, 0)  # Jaune
-        elif self.unit_type == 'Tasse de Café':
-            color = (165, 42, 42)  # Marron
-        elif self.unit_type == 'Hamster Gangster':
-            color = (128, 128, 128)  # Gris
-        else:
-            color = RED if self.team == 'enemy' else BLUE
+        if (self.team == 'player'):
+            color = BLUE  # bleu si ton équipe
+        elif self.team == 'enemy':
+            color = RED # rouge si adversaire
 
         # Dessiner le personnage avec son image
-        screen.blit(self.image, (self.x * CELL_SIZE, self.y * CELL_SIZE))
+        screen.blit(self.image, (self.x * (CELL_SIZE-5), self.y * (CELL_SIZE-5)))  # -5 pour reconnaitre facilement les équipes
 
         # Dessiner la barre de vie
         max_bar_width = int(CELL_SIZE * (self.max_health / 20))  # Ajuster la longueur max
         current_bar_width = int(max_bar_width * (self.health / self.max_health))
         bar_height = 5
-        bar_x = self.x * CELL_SIZE + (CELL_SIZE - max_bar_width) // 2  # Centrer la barre
-        bar_y = self.y * CELL_SIZE - 10  # Position au-dessus de l'unité
+        # bar_x = self.x * CELL_SIZE + (CELL_SIZE - max_bar_width) // 2  # Centrer la barre
+        # bar_y = self.y * CELL_SIZE - 10  # Position au-dessus de l'unité
+        bar_x = self.x * CELL_SIZE
+        bar_y = self.y * CELL_SIZE
+
 
         # Fond rouge (barre vide)
         pygame.draw.rect(screen, RED, (bar_x, bar_y, max_bar_width, bar_height))
@@ -147,7 +158,7 @@ class Team:
         Initialise une équipe avec un nom et une liste d'unités.
         """
         self.name = name  # Nom de l'équipe (ex. 'Player', 'Enemy')
-        self.units = units  # Liste d'instances de Unit
+        self.units = units  # Liste d'instances des personnage
 
     def is_defeated(self):
         """
@@ -167,46 +178,3 @@ class Team:
         """
         for unit in self.units:
             unit.draw(screen)
-
-class Enemy(Unit):
-    """
-    Classe pour représenter un ennemi.
-    Hérite de la classe Unit.
-    """
-    def __init__(self, image_path, x, y, health, attack_power, walk_on_wall, walk_on_water, unit_type, speed, defense):
-        super().__init__(image_path, x, y, health, attack_power, 'enemy', walk_on_wall, walk_on_water, unit_type, speed, defense)
-
-    def use_special(self, target):
-        """
-        Compétence spéciale des ennemis.
-        """
-        if self.unit_type == 'Bonbon Contaminé':
-            print("Bonbon Contaminé explose dans un nuage de sucre !")
-            target.health -= 5  # Inflige des dégâts à la zone
-            self.health = 0  # Se détruit après l'explosion
-        elif self.unit_type == 'Gâteau Zombie':
-            print("Gâteau Zombie crache des miettes toxiques !")
-            target.health -= 3  # Inflige des dégâts à un seul ennemi
-        elif self.unit_type == 'Sucette Volante':
-            print("Sucette Volante fonce sur sa cible !")
-            target.health -= 7  # Dégâts puissants
-            self.health -= 2  # Subit un contrecoup
-
-class RangedUnit(Unit):
-    def __init__ (self, x, y, health, attack_power, team, range,walk_on_wall,walk_on_water):
-        super().__init__(x, y,health,attack_power,team,walk_on_wall,walk_on_water)
-        self.range = range
-
-    def attack(self, target):
-        """Attaque une unité cible."""
-        if abs(self.x - target.x) <= range or abs(self.y - target.y) <= range:
-            target.health -= self.attack_power
-
-    def draw(self, screen):
-        """Affiche l'unité sur l'écran."""
-        color = BLUE if self.team == 'player' else RED
-        if self.is_selected:
-            pygame.draw.rect(screen, GREEN, (self.x * CELL_SIZE,
-                             self.y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
-        pygame.draw.circle(screen, color, (self.x * CELL_SIZE + CELL_SIZE //
-                           2, self.y * CELL_SIZE + CELL_SIZE // 2), CELL_SIZE // 3)
