@@ -126,13 +126,13 @@ class Game:
 
                     if event.type == pygame.KEYDOWN:
                         dx, dy = 0, 0
-                        if event.key == pygame.K_LEFT:
+                        if event.key == pygame.K_LEFT and not self.is_position_occupied(selected_unit.x - 1,selected_unit.y):
                             dx = -1
-                        elif event.key == pygame.K_RIGHT:
+                        elif event.key == pygame.K_RIGHT and not self.is_position_occupied(selected_unit.x + 1,selected_unit.y):
                             dx = 1
-                        elif event.key == pygame.K_UP:
+                        elif event.key == pygame.K_UP and not self.is_position_occupied(selected_unit.x,selected_unit.y - 1):
                             dy = -1
-                        elif event.key == pygame.K_DOWN:
+                        elif event.key == pygame.K_DOWN and not self.is_position_occupied(selected_unit.x,selected_unit.y +1):
                             dy = 1
 
                         selected_unit.move(dx, dy)
@@ -142,7 +142,7 @@ class Game:
                             for enemy in self.enemy_team.units:
                                 if abs(selected_unit.x - enemy.x) <= 1 and abs(selected_unit.y - enemy.y) <= 1:
                                     damage = max(0, selected_unit.attack_power - enemy.defense)
-                                    selected_unit.attack(enemy)
+                                    selected_unit.attack(enemy,False,1)
                                     self.current_message = f"{selected_unit.unit_type} attaque {enemy.unit_type} pour {damage} dégâts !"
                                     self.message_timer = pygame.time.get_ticks() + 1500
                                     if enemy.health <= 0:
@@ -159,7 +159,7 @@ class Game:
             enemy.move(dx, dy)
             if abs(enemy.x - target.x) <= 1 and abs(enemy.y - target.y) <= 1:
                 damage = max(0, enemy.attack_power - target.defense)
-                enemy.attack(target)
+                enemy.attack(target,False,1)
                 self.action_messages.append(f"{enemy.unit_type} attaque {target.unit_type} pour {damage} dégâts !")
                 if target.health <= 0:
                     self.player_team.remove_dead_units()

@@ -69,9 +69,12 @@ class Unit:
         """
 
         if abs(dx) + abs(dy) <= self.speed:  # Limite par la vitesse
-            if 0 <= self.x + dx < GRID_SIZE and 0 <= self.y + dy < GRID_SIZE:
-                self.x += dx
-                self.y += dy
+            new_x = self.x + dx
+            new_y = self.y + dy
+
+            if 0 <= new_x < GRID_SIZE and 0 <= new_y < GRID_SIZE:  # Vérifie les limites de la grille
+                self.x = new_x
+                self.y = new_y
 
     def attack(self, target, is_special, coeff_attaque):
         """
