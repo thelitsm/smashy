@@ -37,6 +37,20 @@ class Game:
         # Génération de la carte interactive
         self.generate_map()
 
+    def is_position_occupied(self, x, y):
+        """
+        Vérifie si une position (x, y) est déjà occupée par une unité.
+        
+        x : int
+            Position x de la case cible.
+        y : int
+            Position y de la case cible.
+        """
+        for unit in self.player_team.units + self.enemy_team.units:
+            if unit.x == x and unit.y == y:
+                return True
+        return False
+
     def generate_map(self):
         self.map = []
 

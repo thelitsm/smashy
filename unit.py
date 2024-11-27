@@ -67,6 +67,7 @@ class Unit:
         """
         Déplace l'unité de dx, dy en fonction de sa vitesse.
         """
+
         if abs(dx) + abs(dy) <= self.speed:  # Limite par la vitesse
             if 0 <= self.x + dx < GRID_SIZE and 0 <= self.y + dy < GRID_SIZE:
                 self.x += dx
