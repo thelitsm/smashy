@@ -4,7 +4,8 @@ import random
 # Constantes
 GRID_SIZE = 20
 CELL_SIZE = 40
-WIDTH = GRID_SIZE * CELL_SIZE
+LOG_WIDTH = 500
+WIDTH = GRID_SIZE * CELL_SIZE + LOG_WIDTH  # Ajoute la taille pour la console
 HEIGHT = GRID_SIZE * CELL_SIZE
 FPS = 30
 WHITE = (255, 255, 255)

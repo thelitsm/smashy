@@ -20,15 +20,15 @@ class Game:
         BASE_PATH_CARACTERS = 'assets/persos/'
 
         player_units = [
-            Unit(BASE_PATH_CARACTERS + 'banane_pirate.png', 0, 2,'player', 10, False, False, 'Banane Pirate', speed=2, attack_power=2, defense=2),
-            Unit(BASE_PATH_CARACTERS + 'jus_orange.png', 1, 2,'player', 10, False, False, 'Jus d\'Orange', speed=1, attack_power=1, defense=4),
-            Unit(BASE_PATH_CARACTERS + 'hamster_gangster.png', 0, 3,'player', 15, False, False, 'Hamster Gangster', speed=1,attack_power=3, defense=2)
+            Unit(BASE_PATH_CARACTERS + 'banane_pirate.png', 0, 2,'player', 10, False, False, 'Banane Pirate', speed=2, attack_power=2, defense=0),
+            Unit(BASE_PATH_CARACTERS + 'jus_orange.png', 1, 2,'player', 10, False, False, 'Jus d\'Orange', speed=1, attack_power=1, defense=0),
+            Unit(BASE_PATH_CARACTERS + 'hamster_gangster.png', 0, 3,'player', 15, False, False, 'Hamster Gangster', speed=1,attack_power=3, defense=0)
         ]
 
         enemy_units = [
-            Unit(BASE_PATH_CARACTERS + 'bonbon_contamine.png', 16, 16,'enemy', 10, False, False, 'Bonbon Contaminé', speed=1, attack_power=2, defense=1),
-            Unit(BASE_PATH_CARACTERS + 'meringuich_toxique.png', 15, 16,'enemy', 15, False, False, 'Gâteau Zombie', speed=1, attack_power=2, defense=1),
-            Unit(BASE_PATH_CARACTERS + 'sucette_volante.png', 16, 15,'enemy', 10, False, False, 'Sucette Volante', speed=3, attack_power=2, defense=1)
+            Unit(BASE_PATH_CARACTERS + 'bonbon_contamine.png', 19, 19,'enemy', 10, False, False, 'Bonbon Contaminé', speed=1, attack_power=2, defense=0),
+            Unit(BASE_PATH_CARACTERS + 'meringuich_toxique.png', 19, 18,'enemy', 15, False, False, 'Gâteau Zombie', speed=1, attack_power=2, defense=0),
+            Unit(BASE_PATH_CARACTERS + 'sucette_volante.png', 18, 19,'enemy', 10, False, False, 'Sucette Volante', speed=3, attack_power=2, defense=0)
         ]
 
         self.player_team = Team('Player', player_units)
@@ -56,7 +56,7 @@ class Game:
 
         # mise en place de la map en arrière plan
         self.background_image = pygame.image.load('assets/game_map.png')
-        self.background_image = pygame.transform.scale(self.background_image, (WIDTH, HEIGHT))
+        self.background_image = pygame.transform.scale(self.background_image, (WIDTH-LOG_WIDTH, HEIGHT))
 
         # Définir les proportions pour les cases spéciales
         special_tile_types = {
@@ -126,7 +126,10 @@ class Game:
 
                     if event.type == pygame.KEYDOWN:
                         dx, dy = 0, 0
-                        if event.key == pygame.K_LEFT and not self.is_position_occupied(selected_unit.x - 1,selected_unit.y):
+                        if event.key == pygame.K_q:
+                            pygame.quit()
+                            exit()
+                        elif event.key == pygame.K_LEFT and not self.is_position_occupied(selected_unit.x - 1,selected_unit.y):
                             dx = -1
                         elif event.key == pygame.K_RIGHT and not self.is_position_occupied(selected_unit.x + 1,selected_unit.y):
                             dx = 1
@@ -143,8 +146,8 @@ class Game:
                                 if abs(selected_unit.x - enemy.x) <= 1 and abs(selected_unit.y - enemy.y) <= 1:
                                     damage = max(0, selected_unit.attack_power - enemy.defense)
                                     selected_unit.attack(enemy,False,1)
-                                    self.current_message = f"{selected_unit.unit_type} attaque {enemy.unit_type} pour {damage} dégâts !"
-                                    self.message_timer = pygame.time.get_ticks() + 1500
+                                    self.action_messages.append(f"{selected_unit.unit_type} attaque {enemy.unit_type} pour {damage} dégâts !")
+                                    self.message_timer = pygame.time.get_ticks() + 5000
                                     if enemy.health <= 0:
                                         self.enemy_team.remove_dead_units()
                                         self.action_messages.append(f"{enemy.unit_type} est vaincu !")
@@ -168,16 +171,32 @@ class Game:
     def flip_display(self):
         # Dessiner l'image de fond
         self.screen.blit(self.background_image, (0, 0))
+        # # Dessiner la grille blanche
+        # for x in range(0, WIDTH, CELL_SIZE):
+        #     pygame.draw.line(self.screen, (255, 255, 255), (x, 0), (x, HEIGHT))  # Lignes verticales
+        # for y in range(0, HEIGHT, CELL_SIZE):
+        #     pygame.draw.line(self.screen, (255, 255, 255), (0, y), (WIDTH, y))  # Lignes horizontales
         # Dessiner la grille blanche
-        for x in range(0, WIDTH, CELL_SIZE):
+        for x in range(0, GRID_SIZE * CELL_SIZE, CELL_SIZE):
             pygame.draw.line(self.screen, (255, 255, 255), (x, 0), (x, HEIGHT))  # Lignes verticales
         for y in range(0, HEIGHT, CELL_SIZE):
-            pygame.draw.line(self.screen, (255, 255, 255), (0, y), (WIDTH, y))  # Lignes horizontales
-        for row in self.map:
-            for tile in row:
-                tile.draw(self.screen)
+            pygame.draw.line(self.screen, (255, 255, 255), (0, y), (GRID_SIZE * CELL_SIZE, y))  # Lignes horizontales
+
+        # Dessiner la console à droite
+        pygame.draw.rect(self.screen, (0, 0, 0), (GRID_SIZE * CELL_SIZE, 0, LOG_WIDTH, HEIGHT))  # Rectangle noir
+
+        # Afficher les messages d'action
+        font = pygame.font.SysFont(None, 24)
+        y_offset = 10
+        for message in self.action_messages[-20:]:  # Affiche les 20 derniers messages
+            text_surface = font.render(message, True, (255, 255, 255))
+            self.screen.blit(text_surface, (GRID_SIZE * CELL_SIZE + 10, y_offset))
+            y_offset += 20
+
+        # Dessiner les unités
         self.player_team.draw(self.screen)
         self.enemy_team.draw(self.screen)
+
         pygame.display.flip()
 
 def main():
