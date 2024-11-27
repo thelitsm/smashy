@@ -2,8 +2,8 @@ import pygame
 import random
 
 # Constantes
-GRID_SIZE = 16
-CELL_SIZE = 50
+GRID_SIZE = 20
+CELL_SIZE = 40
 WIDTH = GRID_SIZE * CELL_SIZE
 HEIGHT = GRID_SIZE * CELL_SIZE
 FPS = 30
@@ -130,16 +130,14 @@ class Unit:
             color = RED # rouge si adversaire
 
         # Dessiner le personnage avec son image
-        screen.blit(self.image, (self.x * (CELL_SIZE-5), self.y * (CELL_SIZE-5)))  # -5 pour reconnaitre facilement les équipes
+        screen.blit(self.image, (self.x * (CELL_SIZE), self.y * (CELL_SIZE)))  
 
         # Dessiner la barre de vie
         max_bar_width = int(CELL_SIZE * (self.max_health / 20))  # Ajuster la longueur max
         current_bar_width = int(max_bar_width * (self.health / self.max_health))
         bar_height = 5
-        # bar_x = self.x * CELL_SIZE + (CELL_SIZE - max_bar_width) // 2  # Centrer la barre
-        # bar_y = self.y * CELL_SIZE - 10  # Position au-dessus de l'unité
-        bar_x = self.x * CELL_SIZE
-        bar_y = self.y * CELL_SIZE
+        bar_x = self.x * CELL_SIZE + (CELL_SIZE - max_bar_width) // 2  # Centrer la barre
+        bar_y = self.y * CELL_SIZE - 10  # Position au-dessus de l'unité
 
 
         # Fond rouge (barre vide)

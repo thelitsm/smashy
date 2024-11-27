@@ -154,6 +154,11 @@ class Game:
     def flip_display(self):
         # Dessiner l'image de fond
         self.screen.blit(self.background_image, (0, 0))
+        # Dessiner la grille blanche
+        for x in range(0, WIDTH, CELL_SIZE):
+            pygame.draw.line(self.screen, (255, 255, 255), (x, 0), (x, HEIGHT))  # Lignes verticales
+        for y in range(0, HEIGHT, CELL_SIZE):
+            pygame.draw.line(self.screen, (255, 255, 255), (0, y), (WIDTH, y))  # Lignes horizontales
         for row in self.map:
             for tile in row:
                 tile.draw(self.screen)
