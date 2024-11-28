@@ -1,5 +1,8 @@
 import pygame
 import random
+import json
+
+from tile import *
 
 # Constantes
 GRID_SIZE = 20
@@ -110,17 +113,6 @@ class Unit:
         elif self.unit_type == 'Sucette Volante':
             print("Sucette Volante fonce sur sa cible !")
             target.health -= 7  # Dégâts puissants
-
-    def degat_zone(self, team, position_x, position_y, damage):
-        print(f"{self.unit_type} utilise une attaque de zone !")
-        for unit in team.units:
-            # Vérifie si l'unité est dans la zone de ±2 cases
-            if abs(unit.x - position_x) <= 2 and abs(unit.y - position_y) <= 2:
-                # Inflige les dégâts à l'unité
-                unit.health -= max(0, damage - unit.defense)
-                print(f"{unit.unit_type} a subi {max(0, damage - unit.defense)} dégâts !")
-                if unit.health <= 0:
-                    print(f"{unit.unit_type} est éliminé !")
                     
 
     def draw(self, screen):
@@ -150,6 +142,158 @@ class Unit:
 
         # Barre verte (barre de vie actuelle)
         pygame.draw.rect(screen, GREEN, (bar_x, bar_y, current_bar_width, bar_height))
+
+class HamsterGangster(Unit):
+    def __init__(self, x, y):
+        """
+        Initialisation spécifique au Hamster Gangster.
+        """
+        super().__init__(
+            image_path="assets/persos/hamster_gangster.png",
+            x=x,
+            y=y,
+            team="player",
+            health=15,
+            walk_on_wall=False,
+            walk_on_water=False,
+            unit_type="Hamster Gangster",
+            speed=1, 
+            attack_power=3,
+            defense=0
+        )
+
+    def use_special(self, target):
+        """
+        Utilise la compétence spéciale du Hamster Gangster : "ak-noisettes".
+        """
+        print(f"{self.unit_type} utilise son ak-noisettes sur {target.unit_type} !")
+        self.attack(target, is_special=True, coeff_attaque=1.5)
+
+    def draw(self, screen):
+        """
+        Dessine le Hamster Gangster avec ses spécificités.
+        """
+        super().draw(screen)
+
+class JusOrange(Unit):
+    def __init__(self, x, y):
+        """
+        Initialisation spécifique au Hamster Gangster.
+        """
+        super().__init__(
+            image_path="assets/persos/jus_orange.png",
+            x=x,
+            y=y,
+            team="player",
+            health=15,
+            walk_on_wall=False,
+            walk_on_water=True,
+            unit_type="Jus orange",
+            speed=1, 
+            attack_power=2,
+            defense= 4
+        )
+
+    def use_special(self, target):
+        print(f"{self.unit_type} soigne son co-equipier {target.unit_type} !")
+        self.attack(target, is_special=False, coeff_attaque=1)
+
+    def draw(self, screen):
+
+        super().draw(screen)
+
+class BananePlanteur(Unit):
+    def __init__(self, x, y):
+        super().__init__(
+            image_path="assets/persos/banane_pirate.png",
+            x=x,
+            y=y,
+            team="player",
+            health=15,
+            walk_on_wall=False,
+            walk_on_water=True,
+            unit_type="Banane Planteur",
+            speed=3, 
+            attack_power=3,
+            defense=1
+        )
+
+    def use_special(self, target):
+        print(f"{self.unit_type} utilise son sabre tropical sur {target.unit_type} !")
+        self.attack(target, is_special=True, coeff_attaque=1.5)
+
+    def draw(self, screen):
+        super().draw(screen)
+
+class BonbonContaminé(Unit):
+    def __init__(self, x, y):
+        super().__init__(
+            image_path="assets/persos/bonbon_contamine.png",
+            x=x,
+            y=y,
+            team="enemy",
+            health=15,
+            walk_on_wall=False,
+            walk_on_water=True,
+            unit_type="Banane Planteur",
+            speed=1, 
+            attack_power=8,
+            defense=2
+        )
+
+    def use_special(self, target):
+        print(f"{self.unit_type} explose {target.unit_type} !")
+        self.attack(target, is_special=True, coeff_attaque=2)
+
+    def draw(self, screen):
+        super().draw(screen)
+
+class MeringuichToxique(Unit):
+    def __init__(self, x, y):
+        super().__init__(
+            image_path="assets/persos/meringuich_toxique.png",
+            x=x,
+            y=y,
+            team="enemy",
+            health=15,
+            walk_on_wall=False,
+            walk_on_water=True,
+            unit_type="Meringuich Toxique",
+            speed=1, 
+            attack_power=3,
+            defense=1
+        )
+
+    def use_special(self, target):
+        print(f"{self.unit_type} crache des meringues toxiques surn{target.unit_type} !")
+        self.attack(target, is_special=True, coeff_attaque=1.5)
+
+    def draw(self, screen):
+        super().draw(screen)
+
+class SucetteVolante(Unit):
+    def __init__(self, x, y):
+        super().__init__(
+            image_path="assets/persos/sucette_volante.png",
+            x=x,
+            y=y,
+            team="enemy",
+            health=15,
+            walk_on_wall=True,
+            walk_on_water=True,
+            unit_type="Sucette Volante",
+            speed=2, 
+            attack_power=3,
+            defense=1
+        )
+
+    def use_special(self, target):
+        print(f"{self.unit_type} inflige un coup d'aile sur {target.unit_type} !")
+        self.attack(target, is_special=False, coeff_attaque=1)
+
+    def draw(self, screen):
+        super().draw(screen)
+        
 
         
 class Team:

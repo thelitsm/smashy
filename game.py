@@ -1,5 +1,6 @@
 import pygame
 import random
+import json
 
 from unit import *
 from tile import *
@@ -16,19 +17,22 @@ class Game:
         self.message_timer = 0
         self.action_messages = []
 
+        # Charger les propriétés de la carte à partir du fichier JSON
+        self.load_map_from_json("map_config.json")
+
         # Initialisation des unités
         BASE_PATH_CARACTERS = 'assets/persos/'
 
         player_units = [
-            Unit(BASE_PATH_CARACTERS + 'banane_pirate.png', 0, 2,'player', 10, False, False, 'Banane Pirate', speed=2, attack_power=2, defense=0),
-            Unit(BASE_PATH_CARACTERS + 'jus_orange.png', 1, 2,'player', 10, False, False, 'Jus d\'Orange', speed=1, attack_power=1, defense=0),
-            Unit(BASE_PATH_CARACTERS + 'hamster_gangster.png', 0, 3,'player', 15, False, False, 'Hamster Gangster', speed=1,attack_power=3, defense=0)
+            HamsterGangster(0,2),
+            JusOrange(0,3),
+            BananePlanteur(1,2)
         ]
 
         enemy_units = [
-            Unit(BASE_PATH_CARACTERS + 'bonbon_contamine.png', 19, 19,'enemy', 10, False, False, 'Bonbon Contaminé', speed=1, attack_power=2, defense=0),
-            Unit(BASE_PATH_CARACTERS + 'meringuich_toxique.png', 19, 18,'enemy', 15, False, False, 'Gâteau Zombie', speed=1, attack_power=2, defense=0),
-            Unit(BASE_PATH_CARACTERS + 'sucette_volante.png', 18, 19,'enemy', 10, False, False, 'Sucette Volante', speed=3, attack_power=2, defense=0)
+            BonbonContaminé(19,19),
+            MeringuichToxique(19,18),
+            SucetteVolante(18,19)
         ]
 
         self.player_team = Team('Player', player_units)
@@ -50,6 +54,13 @@ class Game:
             if unit.x == x and unit.y == y:
                 return True
         return False
+    
+    def load_map_from_json(self, file_path):
+        """
+        Charge la matrice de la carte à partir d'un fichier JSON.
+        """
+        with open(file_path, "r") as file:
+            self.map_matrix = json.load(file)["map"]
 
     def generate_map(self):
         self.map = []
@@ -58,43 +69,58 @@ class Game:
         self.background_image = pygame.image.load('assets/game_map.png')
         self.background_image = pygame.transform.scale(self.background_image, (WIDTH-LOG_WIDTH, HEIGHT))
 
-        # Définir les proportions pour les cases spéciales
-        special_tile_types = {
-            "infranchissable": 0.05,  # 5% de cases infranchissables
-            "vitaminé": 0.10,           # 10% de cases régénératrices
-            "huileuse": 0.07,        # 7% de cases glissantes
-            "mielleuse": 0.08        # 8% de cases collantes
-        }
+        #Construit les objets `Tile` en fonction de la matrice chargée.
 
-        # Parcourir chaque case de la grille
-        for y in range(GRID_SIZE):
-            row = []
-            for x in range(GRID_SIZE):
-                # Tirage aléatoire pour déterminer le type de la case
-                random_value = random.random()
-                tile_type = "normal"
-                image_path = "assets/cases/normal.png"      #case normale par défaut 
+        for y, row in enumerate(self.map_matrix):
+            tile_row = []
+            for x, tile_type in enumerate(row):
+                # Définir les propriétés de la case
+                if tile_type == "mur":
+                    is_walkable = False
+                elif tile_type == "normal":  # Case normale
+                    is_walkable = True
 
-                if random_value < special_tile_types["infranchissable"]:
-                    tile_type = "infranchissable"
-                    image_path = "assets/cases/spatule.png"
-                elif random_value < special_tile_types["infranchissable"] + special_tile_types["vitaminé"]:
-                    tile_type = "vitaminé"
-                    image_path = "assets/cases/orange.png"
-                elif random_value < (special_tile_types["infranchissable"] +
-                                    special_tile_types["vitaminé"] +
-                                    special_tile_types["huileuse"]):
-                    tile_type = "huileuse"
-                    image_path = "assets/cases/huile.png"
-                elif random_value < (special_tile_types["infranchissable"] +
-                                    special_tile_types["vitaminé"] +
-                                    special_tile_types["huileuse"] +
-                                    special_tile_types["mielleuse"]):
-                    tile_type = "mielleuse"
-                    image_path = "assets/cases/miel.png"
+                # Créer l'objet `Tile`
+                tile_row.append(Tile(x, y, tile_type, is_walkable))
+            self.map.append(tile_row)
 
-                # Ajouter la case à la ligne
-                row.append(Tile(x, y, tile_type, '0',image_path))
+        # # Définir les proportions pour les cases spéciales
+        # special_tile_types = {
+        #     "infranchissable": 0.05,  # 5% de cases infranchissables
+        #     "vitaminé": 0.10,           # 10% de cases régénératrices
+        #     "huileuse": 0.07,        # 7% de cases glissantes
+        #     "mielleuse": 0.08        # 8% de cases collantes
+        # }
+
+        # # Parcourir chaque case de la grille
+        # for y in range(GRID_SIZE):
+        #     row = []
+        #     for x in range(GRID_SIZE):
+        #         # Tirage aléatoire pour déterminer le type de la case
+        #         random_value = random.random()
+        #         tile_type = "normal"
+        #         image_path = "assets/cases/normal.png"      #case normale par défaut 
+
+        #         if random_value < special_tile_types["infranchissable"]:
+        #             tile_type = "infranchissable"
+        #             image_path = "assets/cases/spatule.png"
+        #         elif random_value < special_tile_types["infranchissable"] + special_tile_types["vitaminé"]:
+        #             tile_type = "vitaminé"
+        #             image_path = "assets/cases/orange.png"
+        #         elif random_value < (special_tile_types["infranchissable"] +
+        #                             special_tile_types["vitaminé"] +
+        #                             special_tile_types["huileuse"]):
+        #             tile_type = "huileuse"
+        #             image_path = "assets/cases/huile.png"
+        #         elif random_value < (special_tile_types["infranchissable"] +
+        #                             special_tile_types["vitaminé"] +
+        #                             special_tile_types["huileuse"] +
+        #                             special_tile_types["mielleuse"]):
+        #             tile_type = "mielleuse"
+        #             image_path = "assets/cases/miel.png"
+
+        #         # Ajouter la case à la ligne
+        #         row.append(Tile(x, y, tile_type, '0',image_path))
 
     
     # def apply_tile_effect(self, unit):
@@ -147,7 +173,7 @@ class Game:
                                     damage = max(0, selected_unit.attack_power - enemy.defense)
                                     selected_unit.attack(enemy,False,1)
                                     self.action_messages.append(f"{selected_unit.unit_type} attaque {enemy.unit_type} pour {damage} dégâts !")
-                                    self.message_timer = pygame.time.get_ticks() + 5000
+                                    self.message_timer = pygame.time.get_ticks() + 3000
                                     if enemy.health <= 0:
                                         self.enemy_team.remove_dead_units()
                                         self.action_messages.append(f"{enemy.unit_type} est vaincu !")
