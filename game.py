@@ -50,8 +50,16 @@ class Game:
         y : int
             Position y de la case cible.
         """
+         # Vérifie si (x, y) est dans les limites de la carte
+        if not (0 <= x < len(self.map[0]) and 0 <= y < len(self.map)):
+            return True  # Considère les positions hors limites comme non accessibles
+    
         for unit in self.player_team.units + self.enemy_team.units:
             if unit.x == x and unit.y == y:
+                return True
+            # Vérifie si la case est franchissable
+            actual_tile=self.map[y][x]
+            if not actual_tile.walkable:  # Accès à la matrice de la carte
                 return True
         return False
     
@@ -83,6 +91,7 @@ class Game:
                 # Créer l'objet `Tile`
                 tile_row.append(Tile(x, y, tile_type, is_walkable))
             self.map.append(tile_row)
+        print(self.map)
 
         # # Définir les proportions pour les cases spéciales
         # special_tile_types = {

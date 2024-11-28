@@ -12,5 +12,5 @@ class Tile:
         self.tile_type = tile_type  # Type de la case (normal ou mur)
         self.walkable = is_walkable # Les unités peuvent-elles s'y déplacer ? (bool)
 
-    def draw(self, screen):
-        screen.blit(self.image, (self.x * CELL_SIZE, self.y * CELL_SIZE))
+    # def draw(self, screen):
+    #     screen.blit(self.image, (self.x * CELL_SIZE, self.y * CELL_SIZE))
