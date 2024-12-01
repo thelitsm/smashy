@@ -16,7 +16,7 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
-RIVER_BLUE = (173,216,230)   #ajout de la couleur de l'eau pour la carte du jeu
+RIVER_BLUE = (173,216,230,40)   #ajout de la couleur de l'eau pour la carte du jeu
 GROUND_BROWN = (165,42,42)   #ajout de la couleur des obstacles montagneux) pour la carte du jeu
 VALLEY_GREEN =(144,238,144)  #ajout de la couleur de l'herbe(le sol) pour la carte 
 
@@ -62,10 +62,12 @@ class Unit:
         self.walk_on_water = walk_on_water
         self.unit_type = unit_type  # Type de l'unité
         self.speed = speed  # Vitesse de déplacement
+        self.moves = 0
         self.attack_power = attack_power
         self.defense = defense  # Réduction des dégâts
         self.is_selected = False
         self.max_health = health # Vie maximale pour dessiner une barre de vie
+        self.sp = 0
 
     def move(self, dx, dy):
         """
@@ -113,7 +115,9 @@ class Unit:
         elif self.unit_type == 'Sucette Volante':
             print("Sucette Volante fonce sur sa cible !")
             target.health -= 7  # Dégâts puissants
-                    
+
+    def use_special2(self,game):
+        print(self.unit_type)                
 
     def draw(self, screen):
         """
@@ -136,12 +140,24 @@ class Unit:
         bar_x = self.x * CELL_SIZE + (CELL_SIZE - max_bar_width) // 2  # Centrer la barre
         bar_y = self.y * CELL_SIZE - 10  # Position au-dessus de l'unité
 
+        sp_bar_width = int(CELL_SIZE * (self.max_health / 20))   # Ajuster la longueur max
+        spc_bar_width = int(sp_bar_width * (self.sp / 6))
+        bar_height = 5
+        sp_x = self.x * CELL_SIZE + (CELL_SIZE - sp_bar_width ) // 2  # Centrer la barre
+        sp_y = self.y * CELL_SIZE - 5 # Position au-dessus de l'unité
+
 
         # Fond rouge (barre vide)
         pygame.draw.rect(screen, RED, (bar_x, bar_y, max_bar_width, bar_height))
-
         # Barre verte (barre de vie actuelle)
         pygame.draw.rect(screen, GREEN, (bar_x, bar_y, current_bar_width, bar_height))
+
+        #Fond Noir
+        pygame.draw.rect(screen, BLACK, (sp_x, sp_y, sp_bar_width, bar_height))
+        # Barre Bleue (barre de sp actuelle)
+        pygame.draw.rect(screen, BLUE, (sp_x, sp_y, spc_bar_width, bar_height))
+
+
 
 class HamsterGangster(Unit):
     def __init__(self, x, y):
@@ -157,7 +173,7 @@ class HamsterGangster(Unit):
             walk_on_wall=False,
             walk_on_water=False,
             unit_type="Hamster Gangster",
-            speed=1, 
+            speed=3, 
             attack_power=3,
             defense=0
         )
@@ -168,7 +184,17 @@ class HamsterGangster(Unit):
         """
         print(f"{self.unit_type} utilise son ak-noisettes sur {target.unit_type} !")
         self.attack(target, is_special=True, coeff_attaque=1.5)
-
+    def special2(self,game):
+        print(f"{self.unit_type} utilise Nut Barrage !")
+        for enemy in game.enemy_team.units:
+            if abs(self.x - enemy.x) <= 1 and abs(self.y - enemy.y) <= 2:  # Vérifie si l'ennemi est dans le rayon
+                damage = max(0, random.randint(3,10) - enemy.defense)  # dégats démultipliés
+                enemy.health -= damage
+                enemy.defense = max(0, enemy.defense - 1)  # Réduit la défense de 1
+                print(f"{enemy.unit_type} subit {damage} dégâts de Nut Barrage et sa défense est réduite à {enemy.defense} !")
+            if enemy.health <= 0:
+                game.enemy_team.remove_dead_units()
+                game.action_messages.append(f"{enemy.unit_type} est vaincu !")
     def draw(self, screen):
         """
         Dessine le Hamster Gangster avec ses spécificités.
@@ -189,15 +215,26 @@ class JusOrange(Unit):
             walk_on_wall=False,
             walk_on_water=True,
             unit_type="Jus orange",
-            speed=1, 
+            speed=3, 
             attack_power=2,
             defense= 4
         )
 
-    def use_special(self, target):
-        print(f"{self.unit_type} soigne son co-equipier {target.unit_type} !")
-        self.attack(target, is_special=False, coeff_attaque=1)
-
+    def use_special(self, targets):
+        for ally in targets:
+            if abs(self.x - ally.x) <= 1 and abs(self.y - ally.y) <= 1:
+                r = random.randint(2, 5)
+                ally.health += r
+                print(f"{self.unit_type} soigne {ally.unit_type} de {r} pv !")
+    def use_special2(self, game):
+        for ally in game.player_team.units:
+           if abs(self.x - ally.x) <= 1 and abs(self.y - ally.y) <= 1:
+                r = random.randint(1, 3)
+                ally.health += r 
+        for enemy in game.enemy_team.units:
+           if abs(self.x - enemy.x) <= 1 and abs(self.y - enemy.y) <= 1:
+                r = random.randint(1, 3)
+                ally.health -= r 
     def draw(self, screen):
 
         super().draw(screen)
@@ -213,7 +250,7 @@ class BananePlanteur(Unit):
             walk_on_wall=False,
             walk_on_water=True,
             unit_type="Banane Planteur",
-            speed=3, 
+            speed=4, 
             attack_power=3,
             defense=1
         )
@@ -222,6 +259,43 @@ class BananePlanteur(Unit):
         print(f"{self.unit_type} utilise son sabre tropical sur {target.unit_type} !")
         self.attack(target, is_special=True, coeff_attaque=1.5)
 
+    def special2(self,game):
+        #bomba
+        x,y = 4,4        
+        c = False
+        while (not c):
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        pygame.quit()
+                        exit()
+                    elif event.key == pygame.K_LEFT and x > 0:
+                        x -= 1
+                    elif event.key == pygame.K_RIGHT and x < GRID_SIZE - 1:
+                        x += 1
+                    elif event.key == pygame.K_UP and y > 0:
+                        y -= 1
+                    elif event.key == pygame.K_DOWN and y < GRID_SIZE - 1:
+                        y += 1
+                    game.flip_display()
+                    for i in range(len(game.map)):
+                        for j in range(len(game.map[0])):
+                            if (x == i and abs(y - j) < 4) or (y == j and abs(x - i) < 4):
+                                tile_rect = pygame.Rect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+                                pygame.draw.rect(game.screen, RED, tile_rect)
+                    pygame.display.flip()
+                    if event.key == pygame.K_SPACE:
+                        c = True
+        for enemy in game.enemy_team.units:
+            if (x == enemy.x and abs(y - enemy.y) < 4) or (enemy.y == y and abs(enemy.x - x) < 4):
+                enemy.health -= 3
+                if enemy.health <= 0:
+                    game.enemy_team.remove_dead_units()
+                    game.action_messages.append(f"{enemy.unit_type} est vaincu !")
     def draw(self, screen):
         super().draw(screen)
 
@@ -259,7 +333,7 @@ class MeringuichToxique(Unit):
             walk_on_wall=False,
             walk_on_water=True,
             unit_type="Meringuich Toxique",
-            speed=1, 
+            speed=4, 
             attack_power=3,
             defense=1
         )
