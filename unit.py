@@ -184,7 +184,7 @@ class HamsterGangster(Unit):
         """
         print(f"{self.unit_type} utilise son ak-noisettes sur {target.unit_type} !")
         self.attack(target, is_special=True, coeff_attaque=1.5)
-    def special2(self,game):
+    def use_special2(self,game):
         print(f"{self.unit_type} utilise Nut Barrage !")
         for enemy in game.enemy_team.units:
             if abs(self.x - enemy.x) <= 1 and abs(self.y - enemy.y) <= 2:  # Vérifie si l'ennemi est dans le rayon
@@ -259,7 +259,7 @@ class BananePlanteur(Unit):
         print(f"{self.unit_type} utilise son sabre tropical sur {target.unit_type} !")
         self.attack(target, is_special=True, coeff_attaque=1.5)
 
-    def special2(self,game):
+    def use_special2(self,game):
         #bomba
         x,y = 4,4        
         c = False

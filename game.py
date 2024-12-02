@@ -252,7 +252,7 @@ class Game:
                                                 self.action_messages.append(f"{enemy.unit_type} est vaincu !")
                             elif (choice == 3): #attaque speciale 2
                                 selected_unit.sp -= 6
-                                selected_unit.special2(self);
+                                selected_unit.use_special2(self);
                             has_acted = True
                             selected_unit.is_selected = False  
 
