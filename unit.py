@@ -175,6 +175,42 @@ class HamsterGangster(Unit):
         """
         super().draw(screen)
 
+    def attaque_ak_noisette(self, enemy_team):
+        """
+        Attaque à longue portée, tire sur un ennemi à une portée de 6 cases.
+        """
+        print(f"{self.unit_type} utilise l'attaque AK-Noisette !")
+        for enemy in enemy_team.units:
+            if abs(self.x - enemy.x) <= 6 and abs(self.y - enemy.y) <= 6:
+                damage = max(0, self.attack_power - enemy.defense)
+                enemy.health -= damage
+                print(f"{enemy.unit_type} a subi {damage} dégâts !")
+                if enemy.health <= 0:
+                    print(f"{enemy.unit_type} est éliminé !")
+                break  # Une fois l'ennemi touché, l'attaque se termine
+    
+    def attaque_morsure_double_dents(self, enemy_team):
+        """
+        Attaque à courte portée, rayon d'une case, double les dégâts.
+        """
+        print(f"{self.unit_type} utilise l'attaque Morsure Double-Dents !")
+        for enemy in enemy_team.units:
+            if abs(self.x - enemy.x) <= 1 and abs(self.y - enemy.y) <= 1:
+                damage = 2 * (max(0, self.attack_power - enemy.defense))  # Double les dégâts
+                enemy.health -= damage
+                print(f"{enemy.unit_type} a subi {damage} dégâts !")
+                if enemy.health <= 0:
+                    print(f"{enemy.unit_type} est éliminé !")
+                break  # Une fois l'ennemi touché, l'attaque se termine
+    
+    def hibernation(self):
+        """
+        Restaure des points de vie à Hamster Gangster.
+        """
+        heal_amount = 10  # Guérison de 10 points de vie
+        self.health += heal_amount
+        print(f"{self.unit_type} utilise Hibernation et récupère {heal_amount} points de vie !")
+
 class JusOrange(Unit):
     def __init__(self, x, y):
         """
@@ -198,6 +234,28 @@ class JusOrange(Unit):
         print(f"{self.unit_type} soigne son co-equipier {target.unit_type} !")
         self.attack(target, is_special=False, coeff_attaque=1)
 
+    def attaque_squeeze(self, enemy_team):
+        print(f"{self.unit_type} utilise l'attaque Squeeze !")
+        for enemy in enemy_team.units:
+            if abs(self.x - enemy.x) <= 1 and abs(self.y - enemy.y) <= 1:
+                damage = 1.5 * (max(0, self.attack_power - enemy.defense))  # Augmente légèrement les dégâts
+                enemy.health -= damage
+                print(f"{enemy.unit_type} a subi {damage} dégâts !")
+                if enemy.health <= 0:
+                    print(f"{enemy.unit_type} est éliminé !")
+                break
+
+    def attaque_vitamine_c(self, enemy_team):
+        print(f"{self.unit_type} utilise l'attaque Vitamine C !")
+        for enemy in enemy_team.units:
+            if abs(self.x - enemy.x) <= 2 and abs(self.y - enemy.y) <= 2:
+                damage = max(0, self.attack_power - enemy.defense)
+                enemy.health -= damage
+                print(f"{enemy.unit_type} a subi {damage} dégâts !")
+                if enemy.health <= 0:
+                    print(f"{enemy.unit_type} est éliminé !")
+                break
+
     def draw(self, screen):
 
         super().draw(screen)
@@ -213,7 +271,7 @@ class BananePlanteur(Unit):
             walk_on_wall=False,
             walk_on_water=True,
             unit_type="Banane Planteur",
-            speed=3, 
+            speed=2, 
             attack_power=3,
             defense=1
         )
@@ -265,7 +323,7 @@ class MeringuichToxique(Unit):
         )
 
     def use_special(self, target):
-        print(f"{self.unit_type} crache des meringues toxiques surn{target.unit_type} !")
+        print(f"{self.unit_type} crache des meringues toxiques sur {target.unit_type} !")
         self.attack(target, is_special=True, coeff_attaque=1.5)
 
     def draw(self, screen):

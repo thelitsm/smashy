@@ -24,7 +24,7 @@ class Game:
         BASE_PATH_CARACTERS = 'assets/persos/'
 
         player_units = [
-            HamsterGangster(0,2),
+            HamsterGangster(3,2),
             JusOrange(0,3),
             BananePlanteur(1,2)
         ]
@@ -150,9 +150,11 @@ class Game:
 
     def handle_player_turn(self):
         for selected_unit in self.player_team.units:
+            moves_left = 7 * selected_unit.speed  # Compteur de mouvement (7 déplacements max)
             has_acted = False
             selected_unit.is_selected = True
             self.flip_display()
+
             while not has_acted:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -164,30 +166,71 @@ class Game:
                         if event.key == pygame.K_q:
                             pygame.quit()
                             exit()
-                        elif event.key == pygame.K_LEFT and not self.is_position_occupied(selected_unit.x - 1,selected_unit.y):
-                            dx = -1
-                        elif event.key == pygame.K_RIGHT and not self.is_position_occupied(selected_unit.x + 1,selected_unit.y):
-                            dx = 1
-                        elif event.key == pygame.K_UP and not self.is_position_occupied(selected_unit.x,selected_unit.y - 1):
-                            dy = -1
-                        elif event.key == pygame.K_DOWN and not self.is_position_occupied(selected_unit.x,selected_unit.y +1):
-                            dy = 1
+                        elif event.key == pygame.K_LEFT and not self.is_position_occupied(selected_unit.x - 1, selected_unit.y) and moves_left > 0:
+                            dx = -1 * selected_unit.speed
+                            moves_left -= selected_unit.speed
+                        elif event.key == pygame.K_RIGHT and not self.is_position_occupied(selected_unit.x + 1, selected_unit.y) and moves_left > 0:
+                            dx = 1 * selected_unit.speed
+                            moves_left -= selected_unit.speed
+                        elif event.key == pygame.K_UP and not self.is_position_occupied(selected_unit.x, selected_unit.y - 1) and moves_left > 0:
+                            dy = -1 * selected_unit.speed
+                            moves_left -= selected_unit.speed
+                        elif event.key == pygame.K_DOWN and not self.is_position_occupied(selected_unit.x, selected_unit.y + 1) and moves_left > 0:
+                            dy = 1 * selected_unit.speed
+                            moves_left -= selected_unit.speed
 
                         selected_unit.move(dx, dy)
                         self.flip_display()
 
-                        if event.key == pygame.K_SPACE:
+                        if moves_left == 0 or event.key == pygame.K_SPACE:
+                            self.action_messages.append(f"{selected_unit.unit_type} a terminé son déplacement.")
+                            
+                            # Menu de sélection de l'attaque à afficher dans la console du jeu
+                            self.action_messages.append("Choisissez une attaque :")
+                            self.action_messages.append("1: AK-Noisette")
+                            self.action_messages.append("2: Morsure Double-Dents")
+                            self.action_messages.append("3: Hibernation")
+                            self.action_messages.append("4: Ne rien faire")
+                            self.flip_display()
+
+
+                            # Attente d'une touche pour l'attaque
+                            attack_selected = False  # Flag pour vérifier si l'attaque a été choisie
+                            while not attack_selected:
+                                for event2 in pygame.event.get():
+                                    if event2.type == pygame.KEYDOWN:
+                                        if event2.key == pygame.K_1:
+                                            selected_unit.attaque_ak_noisette(self.enemy_team)
+                                            self.action_messages.append(f"{selected_unit.unit_type} utilise l'attaque AK-Noisette !")
+                                            self.message_timer = pygame.time.get_ticks() + 3000
+                                            attack_selected = True
+                                        elif event2.key == pygame.K_2:
+                                            selected_unit.attaque_morsure_double_dents(self.enemy_team)
+                                            self.action_messages.append(f"{selected_unit.unit_type} utilise Morsure Double-Dents !")
+                                            self.message_timer = pygame.time.get_ticks() + 3000
+                                            attack_selected = True
+                                        elif event2.key == pygame.K_3:
+                                            selected_unit.hibernation()
+                                            self.action_messages.append(f"{selected_unit.unit_type} utilise Hibernation pour se soigner !")
+                                            self.message_timer = pygame.time.get_ticks() + 3000
+                                            attack_selected = True
+                                        elif event2.key == pygame.K_4:
+                                            self.action_messages.append(f"{selected_unit.unit_type} ne fait rien.")
+                                            self.message_timer = pygame.time.get_ticks() + 3000
+                                            attack_selected = True
+
+                                        has_acted = True
+                                        selected_unit.is_selected = False
+                                        break
+                            
+                            # Après avoir effectué l'attaque, afficher les messages d'action
                             for enemy in self.enemy_team.units:
-                                if abs(selected_unit.x - enemy.x) <= 1 and abs(selected_unit.y - enemy.y) <= 1:
-                                    damage = max(0, selected_unit.attack_power - enemy.defense)
-                                    selected_unit.attack(enemy,False,1)
-                                    self.action_messages.append(f"{selected_unit.unit_type} attaque {enemy.unit_type} pour {damage} dégâts !")
-                                    self.message_timer = pygame.time.get_ticks() + 3000
-                                    if enemy.health <= 0:
-                                        self.enemy_team.remove_dead_units()
-                                        self.action_messages.append(f"{enemy.unit_type} est vaincu !")
+                                if enemy.health <= 0:
+                                    self.enemy_team.remove_dead_units()
+                                    self.action_messages.append(f"{enemy.unit_type} est vaincu !")
                             has_acted = True
                             selected_unit.is_selected = False
+
 
     def handle_enemy_turn(self):
         for enemy in self.enemy_team.units[:]:
@@ -204,23 +247,23 @@ class Game:
                     self.action_messages.append(f"{target.unit_type} est vaincu !")
 
     def flip_display(self):
-        # Dessiner l'image de fond
-        self.screen.blit(self.background_image, (0, 0))
-        # # Dessiner la grille blanche
-        # for x in range(0, WIDTH, CELL_SIZE):
-        #     pygame.draw.line(self.screen, (255, 255, 255), (x, 0), (x, HEIGHT))  # Lignes verticales
-        # for y in range(0, HEIGHT, CELL_SIZE):
-        #     pygame.draw.line(self.screen, (255, 255, 255), (0, y), (WIDTH, y))  # Lignes horizontales
+        # Dessiner l'image de fond limitée à la carte
+        self.screen.blit(self.background_image, (0, 0), (0, 0, GRID_SIZE * CELL_SIZE, HEIGHT))
+
         # Dessiner la grille blanche
         for x in range(0, GRID_SIZE * CELL_SIZE, CELL_SIZE):
             pygame.draw.line(self.screen, (255, 255, 255), (x, 0), (x, HEIGHT))  # Lignes verticales
         for y in range(0, HEIGHT, CELL_SIZE):
             pygame.draw.line(self.screen, (255, 255, 255), (0, y), (GRID_SIZE * CELL_SIZE, y))  # Lignes horizontales
 
-        # Dessiner la console à droite
-        pygame.draw.rect(self.screen, (0, 0, 0), (GRID_SIZE * CELL_SIZE, 0, LOG_WIDTH, HEIGHT))  # Rectangle noir
+        # Dessiner les unités
+        self.player_team.draw(self.screen)
+        self.enemy_team.draw(self.screen)
 
-        # Afficher les messages d'action
+        # Dessiner la console à droite (fond noir)
+        pygame.draw.rect(self.screen, (0, 0, 0), (GRID_SIZE * CELL_SIZE, 0, 300, HEIGHT))  # Rectangle noir
+
+        # Afficher les messages d'action dans la console
         font = pygame.font.SysFont(None, 24)
         y_offset = 10
         for message in self.action_messages[-20:]:  # Affiche les 20 derniers messages
@@ -228,11 +271,9 @@ class Game:
             self.screen.blit(text_surface, (GRID_SIZE * CELL_SIZE + 10, y_offset))
             y_offset += 20
 
-        # Dessiner les unités
-        self.player_team.draw(self.screen)
-        self.enemy_team.draw(self.screen)
-
+        # Mettre à jour l'écran
         pygame.display.flip()
+
 
 def main():
     pygame.init()
