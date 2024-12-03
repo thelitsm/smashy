@@ -38,6 +38,10 @@ class Game:
             SucetteVolante(18,19)
         ]
 
+        enemy_units[0].sp = 6
+        enemy_units[1].sp = 6
+        enemy_units[2].sp = 6
+
         self.player_team = Team('Player', player_units)
         self.enemy_team = Team('Enemy', enemy_units)
 

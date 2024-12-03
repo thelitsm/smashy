@@ -328,6 +328,15 @@ class BonbonContaminé(Unit):
         print(f"{self.unit_type} explose {target.unit_type} !")
         self.attack(target, is_special=True, coeff_attaque=2)
 
+    def use_special2(self, game):
+        for ally in game.enemy_team.units:
+           if abs(self.x - ally.x) <= 1 and abs(self.y - ally.y) <= 1:
+                r = random.randint(1, 3)
+                ally.health += r 
+        for enemy in game.player_team.units:
+           if abs(self.x - enemy.x) <= 1 and abs(self.y - enemy.y) <= 1:
+                r = random.randint(1, 3)
+                ally.health -= r 
     def draw(self, screen):
         super().draw(screen)
 
@@ -351,6 +360,19 @@ class MeringuichToxique(Unit):
         print(f"{self.unit_type} crache des meringues toxiques surn{target.unit_type} !")
         self.attack(target, is_special=True, coeff_attaque=1.5)
 
+    def use_special2(self,game):
+        print(f"{self.unit_type} utilise dépot toxic !")
+        for enemy in game.player_team.units:
+            if abs(self.x - enemy.x) <= 1 and abs(self.y - enemy.y) <= 2:  # Vérifie si l'ennemi est dans le rayon
+                damage = max(0, random.randint(3,10) - enemy.defense)  # dégats démultipliés
+                enemy.health -= damage
+                enemy.defense = max(0, enemy.defense - 1)  # Réduit la défense de 1
+                print(f"{enemy.unit_type} subit {damage} dégâts de dépot toxic et sa défense est réduite à {enemy.defense} !")
+            if enemy.health <= 0:
+                game.player_team.remove_dead_units()
+                game.action_messages.append(f"{enemy.unit_type} est vaincu !")
+    
+    
     def draw(self, screen):
         super().draw(screen)
 
@@ -373,7 +395,46 @@ class SucetteVolante(Unit):
     def use_special(self, target):
         print(f"{self.unit_type} inflige un coup d'aile sur {target.unit_type} !")
         self.attack(target, is_special=False, coeff_attaque=1)
+    def use_special2(self,game):
+        #avion bombardier
+        x,y = 4,4        
+        c = False
+        while (not c):
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()   
+                    exit()
 
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        pygame.quit()
+                        exit()
+                    elif event.key == pygame.K_LEFT and x > 0:
+                        x -= 1
+                    elif event.key == pygame.K_RIGHT and x < GRID_SIZE - 1:
+                        x += 1
+                    elif event.key == pygame.K_UP and y > 0:
+                        y -= 1
+                    elif event.key == pygame.K_DOWN and y < GRID_SIZE - 1:
+                        y += 1
+                    game.flip_display()
+                    for i in range(len(game.map)):
+                        for j in range(len(game.map[0])):
+                            a,b = i - x, j - y
+                            if (abs(a) == abs(b)) and (abs(a) + abs(b)) < 10:
+                                tile_rect = pygame.Rect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+                                pygame.draw.rect(game.screen, RED, tile_rect)
+                    pygame.display.flip()
+                    if event.key == pygame.K_SPACE:
+                        c = True
+        for enemy in game.player_team.units:
+            if (x == enemy.x and abs(y - enemy.y) < 4) or (enemy.y == y and abs(enemy.x - x) < 4):
+                enemy.health -= 3
+                if enemy.health <= 0:
+                    game.player_team.remove_dead_units()
+                    game.action_messages.append(f"{enemy.unit_type} est vaincu !")
+    def draw(self, screen):
+        super().draw(screen)
     def draw(self, screen):
         super().draw(screen)
         
