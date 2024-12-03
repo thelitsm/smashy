@@ -28,9 +28,9 @@ class Game:
             JusOrange(0,3),
             BananePlanteur(0,2)
         ]
-        player_units[0].sp = 6;
-        player_units[1].sp = 6;
-        player_units[2].sp = 6;
+        player_units[0].sp = 6
+        player_units[1].sp = 6
+        player_units[2].sp = 6
 
         enemy_units = [
             BonbonContaminé(19,19),
@@ -43,6 +43,154 @@ class Game:
 
         # Génération de la carte interactive
         self.generate_map()
+
+    def show_start_screen(self):
+        # Charger une image de fond
+        start_image = pygame.image.load("assets/start_screen.png")
+        start_image = pygame.transform.scale(start_image, (self.screen.get_width(), self.screen.get_height()))
+        self.screen.blit(start_image, (0, 0))
+
+        # Définir les polices
+        font_title_large = pygame.font.Font(None, 72)
+        font_title_small = pygame.font.Font(None, 72)
+        font_text = pygame.font.Font(None, 48)
+
+        # Texte et couleurs
+        title_text_top = font_title_large.render(" Le Monde Incroyable de Pierrot:", True, WHITE)
+        title_text_bottom = font_title_small.render("L'Apocalypse", True, WHITE)
+        play_text = font_text.render("Press ENTER to Play", True, WHITE)
+        quit_text = font_text.render("Press Q to Quit", True, WHITE)
+        instructions_text = font_text.render("Press I for Instructions", True, WHITE)
+
+        # Rectangle du titre
+        total_width = max(title_text_top.get_width(), title_text_bottom.get_width())
+        total_height = title_text_top.get_height() + title_text_bottom.get_height() + 10
+        title_rect = pygame.Rect(
+            (self.screen.get_width() // 2 - total_width // 2),
+            100,
+            total_width + 20,
+            total_height + 20
+        )
+
+        # Rectangles pour les autres textes
+        play_rect = play_text.get_rect(center=(self.screen.get_width() // 2, 300)).inflate(20, 10)
+        quit_rect = quit_text.get_rect(center=(self.screen.get_width() // 2, 400)).inflate(20, 10)
+        instructions_rect = instructions_text.get_rect(center=(self.screen.get_width() // 2, 500)).inflate(20, 10)
+
+        rect_color = (100, 100, 200)
+        animation_offset_title = 0
+        animation_offset_play = 0
+        animation_offset_quit = 0
+        animation_offset_instructions = 0
+
+        animation_direction_title = 1
+        animation_direction_play = 1
+        animation_direction_quit = 1
+        animation_direction_instructions = 1
+
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        running = False
+                    elif event.key == pygame.K_q:
+                        pygame.quit()
+                        exit()
+                    elif event.key == pygame.K_i:
+                        self.show_instructions()
+
+            # Animation
+            animation_offset_title += animation_direction_title
+            animation_offset_play += animation_direction_play
+            animation_offset_quit += animation_direction_quit
+            animation_offset_instructions += animation_direction_instructions
+
+            if abs(animation_offset_title) > 5:
+                animation_direction_title *= -1
+            if abs(animation_offset_play) > 3:
+                animation_direction_play *= -1
+            if abs(animation_offset_quit) > 3:
+                animation_direction_quit *= -1
+            if abs(animation_offset_instructions) > 3:
+                animation_direction_instructions *= -1
+
+            # Affichage de l'écran de garde
+            self.screen.blit(start_image, (0, 0))
+
+            # Dessiner le rectangle du titre
+            title_rect_animated = title_rect.copy()
+            title_rect_animated.y += animation_offset_title
+            pygame.draw.rect(self.screen, rect_color, title_rect_animated)
+            pygame.draw.rect(self.screen, (255, 255, 255), title_rect_animated, 3)
+            self.screen.blit(title_text_top, (self.screen.get_width() // 2 - title_text_top.get_width() // 2, title_rect_animated.y + 10))
+            self.screen.blit(title_text_bottom, (self.screen.get_width() // 2 - title_text_bottom.get_width() // 2, title_rect_animated.y + title_text_top.get_height() + 15))
+
+            # Dessiner les rectangles des autres textes
+            play_rect_animated = play_rect.copy()
+            play_rect_animated.y += animation_offset_play
+            pygame.draw.rect(self.screen, rect_color, play_rect_animated)
+            pygame.draw.rect(self.screen, (255, 255, 255), play_rect_animated, 2)
+            self.screen.blit(play_text, (play_rect_animated.x + 10, play_rect_animated.y + 5))
+
+            quit_rect_animated = quit_rect.copy()
+            quit_rect_animated.y += animation_offset_quit
+            pygame.draw.rect(self.screen, rect_color, quit_rect_animated)
+            pygame.draw.rect(self.screen, (255, 255, 255), quit_rect_animated, 2)
+            self.screen.blit(quit_text, (quit_rect_animated.x + 10, quit_rect_animated.y + 5))
+
+            instructions_rect_animated = instructions_rect.copy()
+            instructions_rect_animated.y += animation_offset_instructions
+            pygame.draw.rect(self.screen, rect_color, instructions_rect_animated)
+            pygame.draw.rect(self.screen, (255, 255, 255), instructions_rect_animated, 2)
+            self.screen.blit(instructions_text, (instructions_rect_animated.x + 10, instructions_rect_animated.y + 5))
+
+            # Mettre à jour l'écran
+            pygame.display.flip()
+            pygame.time.delay(30)
+
+
+
+    def show_instructions(self):
+        self.screen.fill((0, 0, 0))  # Fond noir
+        font = pygame.font.SysFont(None, 36)
+
+        instructions = [
+            "Comment jouer :",
+            "- Déplacez votre personnage avec les flèches directionnelles.",
+            "- Appuyez sur ESPACE pour valider votre déplacement.",
+            "- Choisissez une attaque ou une action spéciale.",
+            "- Battez les zombibonbons pour gagner !",
+            "",
+            "Press M to return to the main menu.",
+            "Press Q to Quit at anytime during the game."
+        ]
+
+        y_offset = 100
+        for line in instructions:
+            text_surface = font.render(line, True, (255, 255, 255))
+            self.screen.blit(text_surface, (self.screen.get_width() // 2 - text_surface.get_width() // 2, y_offset))
+            y_offset += 50
+
+        pygame.display.flip()
+
+        # Attente pour retourner au menu principal
+        waiting = True
+        while waiting:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        pygame.quit()
+                        exit()
+                    if event.key == pygame.K_m:  # Retour au menu
+                        waiting = False
+        self.show_start_screen()
 
     def is_position_occupied(self, x, y):
         """
@@ -199,7 +347,7 @@ class Game:
                             self.flip_display()
 
                         # Effectuer une attaque
-                        if event.key == pygame.K_SPACE:  #ceci fait la fin du deplacement
+                        if event.key == pygame.K_SPACE or selected_unit.moves == 0:  #ceci marque la fin du deplacement
                             self.action_messages = [] 
                             tile_rect = pygame.Rect(820, 10, CELL_SIZE * 12, CELL_SIZE * 5)
                             pygame.draw.rect(self.screen, BLACK, tile_rect)
@@ -333,7 +481,7 @@ class Game:
         self.enemy_team.draw(self.screen)
 
         # Dessiner la console à droite (fond noir)
-        pygame.draw.rect(self.screen, (0, 0, 0), (GRID_SIZE * CELL_SIZE, 0, 300, HEIGHT))  # Rectangle noir
+        pygame.draw.rect(self.screen, (0, 0, 0), (GRID_SIZE * CELL_SIZE, 0, 500, HEIGHT))  # Rectangle noir
 
         font = pygame.font.SysFont(None, 24)
         y_offset = 10
@@ -351,7 +499,19 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Le Monde Incroyable de Pierrot : l'Apocalypse")
+
+    # Charger et jouer la musique
+    pygame.mixer.init()
+    pygame.mixer.music.load("assets/game_music.mp3")  # Remplacez par le chemin de votre fichier audio
+    pygame.mixer.music.set_volume(0.5)  # Ajustez le volume (0.0 à 1.0)
+    pygame.mixer.music.play(-1)  # Lecture en boucle infinie
+
+    # Afficher la page de garde
     game = Game(screen)
+    game.show_start_screen()
+
+
+
 
     while True:
         game.handle_player_turn()
