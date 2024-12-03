@@ -318,7 +318,7 @@ class BonbonContaminé(Unit):
             health=15,
             walk_on_wall=False,
             walk_on_water=True,
-            unit_type="Banane Planteur",
+            unit_type="Bonbon Contaminé",
             speed=1, 
             attack_power=8,
             defense=2
@@ -360,19 +360,27 @@ class MeringuichToxique(Unit):
         print(f"{self.unit_type} crache des meringues toxiques surn{target.unit_type} !")
         self.attack(target, is_special=True, coeff_attaque=1.5)
 
-    def use_special2(self,game):
-        print(f"{self.unit_type} utilise dépot toxic !")
+
+    def use_special2(self, game):
         for enemy in game.player_team.units:
-            if abs(self.x - enemy.x) <= 1 and abs(self.y - enemy.y) <= 2:  # Vérifie si l'ennemi est dans le rayon
-                damage = max(0, random.randint(3,10) - enemy.defense)  # dégats démultipliés
-                enemy.health -= damage
-                enemy.defense = max(0, enemy.defense - 1)  # Réduit la défense de 1
-                print(f"{enemy.unit_type} subit {damage} dégâts de dépot toxic et sa défense est réduite à {enemy.defense} !")
-            if enemy.health <= 0:
-                game.player_team.remove_dead_units()
-                game.action_messages.append(f"{enemy.unit_type} est vaincu !")
-    
-    
+            #LE COUP DE PIED DE JEAN CLAUDE VAN DAMME
+            if abs(self.x - enemy.x) <= 1 or abs(self.y - enemy.y) <= 1:
+                n=3
+                enemy.health -= (self.attack_power+1)
+                dx,dy = (enemy.x-self.x,enemy.y-self.y)
+                if dx != 0 and dy != 0:
+                    n-=1 # si un perso est en diagonale la distance parcourue par le kick est diminuée
+                while not game.is_position_occupied((enemy.x + dx), enemy.y + dy) and n > 0:
+                    enemy.x += dx
+                    enemy.y += dy
+                    n-=1
+                if n!=3:
+                    enemy.health -= (self.attack_power+1)
+        if enemy.health <= 0:
+            game.player_team.remove_dead_units()
+            game.action_messages.append(f"{enemy.unit_type} est vaincu !")
+                    
+
     def draw(self, screen):
         super().draw(screen)
 

@@ -189,7 +189,7 @@ class Game:
                     pygame.quit()
                     exit()
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
+                    if event.key == pygame.K_q: 
                         pygame.quit()
                         exit()
                     if event.key == pygame.K_m:  # Retour au menu
