@@ -136,8 +136,11 @@ class Unit:
 
         # Si l'unité est active, dessiner un rectangle bleu
         if self.is_active:
+            c = (255,0,0)
+            if self.team == 'player':
+                c = (0,0,255)
             rect = pygame.Rect(self.x * CELL_SIZE, self.y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-            pygame.draw.rect(screen, (0, 0, 255), rect, 3)  # Rectangle bleu, épaisseur 3 pixels
+            pygame.draw.rect(screen, c, rect, 3)  # Rectangle bleu, épaisseur 3 pixels
 
         # Dessiner la barre de vie
         max_bar_width = int(CELL_SIZE * (self.max_health / 20))  # Ajuster la longueur max

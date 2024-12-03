@@ -432,20 +432,137 @@ class Game:
                             self.flip_display()  # Mise à jour l'écran
 
 
-    def handle_enemy_turn(self):
-        for enemy in self.enemy_team.units:
-            target = random.choice(self.player_team.units)
-            dx = 1 if enemy.x < target.x else -1 if enemy.x > target.x else 0
-            dy = 1 if enemy.y < target.y else -1 if enemy.y > target.y else 0
-            enemy.move(dx, dy)
-            if abs(enemy.x - target.x) <= 1 and abs(enemy.y - target.y) <= 1:
-                damage = max(0, enemy.attack_power - target.defense)
-                enemy.attack(target,False,1)
-                self.action_messages.append(f"{enemy.unit_type} attaque {target.unit_type} pour {damage} dégâts !")
-                if target.health <= 0:
-                    self.player_team.remove_dead_units()
-                    self.action_messages.append(f"{target.unit_type} est vaincu !")
+    def handle_player2_turn(self):
+        for selected_unit in self.enemy_team.units:
+            # Définir le personnage comme actif
+            selected_unit.is_active = True
+            has_acted = False
+            selected_unit.moves = selected_unit.speed
+            selected_unit.is_selected = True
+            self.action_messages.append(f" ")
+            self.action_messages.append(f"C'est au tour de {selected_unit.unit_type} !")
+            info_deplacement = f"{selected_unit.unit_type} a {selected_unit.moves} déplacements restants."
+            self.action_messages.append(info_deplacement)
+            self.action_messages.append(f"Appuyez sur ESPACE pour confirmer votre déplacement")
+            index_of_move = self.action_messages.index(info_deplacement)
+            self.flip_display2()
+            if (selected_unit.sp < 6):
+                selected_unit.sp += 1
+            while not has_acted:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        exit()
 
+                    if event.type == pygame.KEYDOWN:
+                        dx, dy = 0, 0
+                        if event.key == pygame.K_q:
+                            pygame.quit()
+                            exit()
+                        elif event.key == pygame.K_LEFT:
+                            dx = -1
+                        elif event.key == pygame.K_RIGHT:
+                            dx = 1
+                        elif event.key == pygame.K_UP:
+                            dy = -1
+                        elif event.key == pygame.K_DOWN:
+                            dy = 1
+
+                        # Vérifier si le mouvement est valide
+                        new_x, new_y = selected_unit.x + dx, selected_unit.y + dy
+                        if (new_x, new_y) in self.get_reachable_tiles(selected_unit):
+                            selected_unit.move(dx, dy)
+                            selected_unit.moves -= 1
+                            self.action_messages[index_of_move]= (f"{selected_unit.unit_type} a {selected_unit.moves} déplacements restants.")
+                            self.flip_display2()
+
+                        # Effectuer une attaque
+                        if event.key == pygame.K_SPACE or selected_unit.moves == 0:  #ceci marque la fin du deplacement
+                            self.action_messages = [] 
+                            tile_rect = pygame.Rect(820, 10, CELL_SIZE * 12, CELL_SIZE * 5)
+                            pygame.draw.rect(self.screen, BLACK, tile_rect)
+                            pygame.display.flip()
+                            self.flip_display2()
+                            selected_unit.moves = 0
+                            choice = -1
+                            # tile_rect = pygame.Rect(820, 10, CELL_SIZE * 10, CELL_SIZE * 5)
+                            # pygame.draw.rect(self.screen, BLACK, tile_rect)
+                            # pygame.display.flip()
+                            self.action_messages.append(f" ")
+                            self.action_messages.append("Choisissez une attaque :")
+                            self.action_messages.append(f"pressez A pour : ne rien faire")
+                            self.action_messages.append(f"pressez Z pour : attaque simple")
+                            self.action_messages.append(f"pressez E pour : attaque spéciale")
+                            self.action_messages.append(f"pressez R pour : attaque spécialement spéciale")
+                            self.action_messages.append(f" ")
+                            self.flip_display2()                          
+
+                            while (choice == -1):
+                                for ch in pygame.event.get():
+                                    if ch.type == pygame.KEYDOWN:                                        
+                                        if (ch.key == pygame.K_a):
+                                            choice = 0
+                                        if ch.key == pygame.K_z :
+                                            choice = 1
+                                        if ch.key == pygame.K_e:
+                                            if(selected_unit.sp < 4):
+                                                self.action_messages.append(f"{selected_unit.unit_type} n'a pas cumulé assez de points spéciaux !")
+                                                break
+                                            choice = 2
+                                        if ch.key == pygame.K_r:
+                                            if (selected_unit.sp < 6):
+                                                self.action_messages.append(f"{selected_unit.unit_type} n'a pas cumulé assez de points spéciaux !")
+                                                break
+                                            choice = 3
+                                        if ch.key == pygame.K_q:
+                                          pygame.quit()   # pour pouvoir quitter meme pendant un tour
+                                          exit()
+                                        self.flip_display2()
+                            self.action_messages = [] 
+                            tile_rect = pygame.Rect(820, 10, CELL_SIZE * 12, CELL_SIZE * 5)
+                            pygame.draw.rect(self.screen, BLACK, tile_rect)
+                            pygame.display.flip()
+
+                            if (choice == 0):
+                                self.action_messages.append(f"{selected_unit.unit_type} a décidé de ne rien faire !")
+                                if selected_unit.sp < 6:
+                                    selected_unit.sp += 1
+                            elif (choice == 1): #attaque de base
+                                for enemy in self.player_team.units:
+                                    if abs(selected_unit.x - enemy.x) <= 1 and abs(selected_unit.y - enemy.y) <= 1:
+                                        damage = max(0, selected_unit.attack_power - enemy.defense)
+                                        selected_unit.attack(enemy, False, 1)
+                                        self.action_messages.append(f"{selected_unit.unit_type} attaque {enemy.unit_type} pour {damage} dégâts !")
+                                        self.message_timer = pygame.time.get_ticks() + 3000
+                                        if enemy.health <= 0:
+                                            self.player_team.remove_dead_units()
+                                            self.action_messages.append(f"{enemy.unit_type} est vaincu !")
+                            elif (choice == 2):#attaque speciale 1
+                                selected_unit.sp -= 4
+                                if selected_unit.unit_type == "Jus orange":
+                                    selected_unit.use_special(self.enemy_team.units)
+                                    self.action_messages.append(f"{enemy.unit_type} a lancé sa bomba !")
+                                else :
+                                    for enemy in self.player_team.units:
+                                        if abs(selected_unit.x - enemy.x) <= 1 and abs(selected_unit.y - enemy.y) <= 1:
+                                            damage = max(0, selected_unit.attack_power - enemy.defense)
+                                            #selected_unit.use_special(enemy, False, 1)
+                                            selected_unit.use_special(enemy)
+                                            self.action_messages.append(f"{selected_unit.unit_type} attaque {enemy.unit_type} pour {damage} dégâts !")
+                                            self.message_timer = pygame.time.get_ticks() + 3000
+                                            if enemy.health <= 0:
+                                                self.player_team.remove_dead_units()
+                                                self.action_messages.append(f"{enemy.unit_type} est vaincu !")
+                            elif (choice == 3): #attaque speciale 2
+                                selected_unit.sp -= 6
+                                selected_unit.use_special2(self)
+                            has_acted = True
+                            selected_unit.is_selected = False
+                            selected_unit.is_active = False 
+                            self.flip_display2()  # Mise à jour l'écran
+
+
+                        
 
     def get_reachable_tiles(self, unit):
         """
@@ -493,6 +610,37 @@ class Game:
         # Mettre à jour l'affichage
         pygame.display.flip()
 
+    def flip_display2(self):   #pour tour j2
+        # Dessiner l'image de fond
+        self.screen.blit(self.background_image, (0, 0))
+
+        # Dessiner les tuiles accessibles pour l'unité sélectionnée
+        for unit in self.enemy_team.units:
+            if unit.is_selected:
+                reachable_tiles = self.get_reachable_tiles(unit)
+                for x, y in reachable_tiles:
+                    tile_rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+                    pygame.draw.rect(self.screen, (200,10,0), tile_rect)  # Remplissage rouge 
+                    
+        # Dessiner les unités
+        self.player_team.draw(self.screen)
+        self.enemy_team.draw(self.screen)
+
+        # Dessiner la console à droite (fond noir)
+        pygame.draw.rect(self.screen, (0, 0, 0), (GRID_SIZE * CELL_SIZE, 0, 500, HEIGHT))  # Rectangle noir
+
+        font = pygame.font.SysFont(None, 24)
+        y_offset = 10
+        for message in self.action_messages[-10:]:  # Affiche les 10 derniers messages
+            text_surface = font.render(message, True, (255, 255, 255))
+            self.screen.blit(text_surface, (GRID_SIZE * CELL_SIZE + 10, y_offset))
+            y_offset += 20
+
+        # Mettre à jour l'affichage
+        pygame.display.flip()
+
+
+
 
 
 def main():
@@ -516,13 +664,15 @@ def main():
     while True:
         game.handle_player_turn()
         if not game.enemy_team.is_defeated():
-            game.handle_enemy_turn()
+            game.handle_player2_turn()
         if game.player_team.is_defeated() or game.enemy_team.is_defeated():
             # Gagnant
             if game.player_team.is_defeated():
-                message = "Les zombibonbons dominent !"
+                #message = "Les zombibonbons dominent !"
+                message = "Les zombibonbons ont réussi 9/11 !, à cause de toi !"
             else:
-                message = "Bravo ! Vous avez rétabli la paix !"
+                #message = "Bravo ! Vous avez rétabli la paix !"
+                message = "BRAVO, tu as prévenu la guerre en iraq , gg wp !"
             print(message)
             pygame.time.wait(3000)
             pygame.quit()
