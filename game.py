@@ -24,9 +24,9 @@ class Game:
         BASE_PATH_CARACTERS = 'assets/persos/'
 
         player_units = [
-            HamsterGangster(0,2),
+            HamsterGangster(1,2),
             JusOrange(0,3),
-            BananePlanteur(1,2)
+            BananePlanteur(0,2)
         ]
         player_units[0].sp = 6;
         player_units[1].sp = 6;
@@ -156,9 +156,17 @@ class Game:
 
     def handle_player_turn(self):
         for selected_unit in self.player_team.units:
+            # Définir le personnage comme actif
+            selected_unit.is_active = True
             has_acted = False
             selected_unit.moves = selected_unit.speed
             selected_unit.is_selected = True
+            self.action_messages.append(f" ")
+            self.action_messages.append(f"C'est au tour de {selected_unit.unit_type} !")
+            info_deplacement = f"{selected_unit.unit_type} a {selected_unit.moves} déplacements restants."
+            self.action_messages.append(info_deplacement)
+            self.action_messages.append(f"Appuyez sur ESPACE pour confirmer votre déplacement")
+            index_of_move = self.action_messages.index(info_deplacement)
             self.flip_display()
             if (selected_unit.sp < 6):
                 selected_unit.sp += 1
@@ -187,23 +195,29 @@ class Game:
                         if (new_x, new_y) in self.get_reachable_tiles(selected_unit):
                             selected_unit.move(dx, dy)
                             selected_unit.moves -= 1
+                            self.action_messages[index_of_move]= (f"{selected_unit.unit_type} a {selected_unit.moves} déplacements restants.")
                             self.flip_display()
 
                         # Effectuer une attaque
                         if event.key == pygame.K_SPACE:  #ceci fait la fin du deplacement
-                            selected_unit.moves = 0
+                            self.action_messages = [] 
+                            tile_rect = pygame.Rect(820, 10, CELL_SIZE * 12, CELL_SIZE * 5)
+                            pygame.draw.rect(self.screen, BLACK, tile_rect)
+                            pygame.display.flip()
                             self.flip_display()
+                            selected_unit.moves = 0
                             choice = -1
-                            font = pygame.font.Font(None, 26)
-                            text_surface = font.render("A:passer son tour", True, WHITE)
-                            text_surface2 = font.render("Z:Attaque", True, WHITE)
-                            text_surface3 = font.render("E:Attaque Spéciale", True, WHITE)
-                            text_surface4 = font.render("R:Attaque Spéciale2", True, WHITE)
-                            self.screen.blit(text_surface, (820, 10))
-                            self.screen.blit(text_surface2, (820, 30))
-                            self.screen.blit(text_surface3, (820, 50))
-                            self.screen.blit(text_surface4, (820, 70))
-                            pygame.display.flip()                           
+                            # tile_rect = pygame.Rect(820, 10, CELL_SIZE * 10, CELL_SIZE * 5)
+                            # pygame.draw.rect(self.screen, BLACK, tile_rect)
+                            # pygame.display.flip()
+                            self.action_messages.append(f" ")
+                            self.action_messages.append("Choisissez une attaque :")
+                            self.action_messages.append(f"pressez A pour : ne rien faire")
+                            self.action_messages.append(f"pressez Z pour : attaque simple")
+                            self.action_messages.append(f"pressez E pour : attaque spéciale")
+                            self.action_messages.append(f"pressez R pour : attaque spécialement spéciale")
+                            self.action_messages.append(f" ")
+                            self.flip_display()                          
 
                             while (choice == -1):
                                 for ch in pygame.event.get():
@@ -212,17 +226,27 @@ class Game:
                                             choice = 0
                                         if ch.key == pygame.K_z :
                                             choice = 1
-                                        if ch.key == pygame.K_e and selected_unit.sp >= 4:
+                                        if ch.key == pygame.K_e:
+                                            if(selected_unit.sp < 4):
+                                                self.action_messages.append(f"{selected_unit.unit_type} n'a pas cumulé assez de points spéciaux !")
+                                                break
                                             choice = 2
-                                        if ch.key == pygame.K_r and selected_unit.sp >= 6:
+                                        if ch.key == pygame.K_r:
+                                            if (selected_unit.sp < 6):
+                                                self.action_messages.append(f"{selected_unit.unit_type} n'a pas cumulé assez de points spéciaux !")
+                                                break
                                             choice = 3
-                                    elif event.type == pygame.QUIT:
-                                        pygame.quit()   # pour pouvoir quitter meme pendant un tour
-                                        exit()
-                            tile_rect = pygame.Rect(820, 10, CELL_SIZE * 10, CELL_SIZE * 5)
+                                        if ch.key == pygame.K_q:
+                                          pygame.quit()   # pour pouvoir quitter meme pendant un tour
+                                          exit()
+                                        self.flip_display()
+                            self.action_messages = [] 
+                            tile_rect = pygame.Rect(820, 10, CELL_SIZE * 12, CELL_SIZE * 5)
                             pygame.draw.rect(self.screen, BLACK, tile_rect)
                             pygame.display.flip()
+
                             if (choice == 0):
+                                self.action_messages.append(f"{selected_unit.unit_type} a décidé de ne rien faire !")
                                 if selected_unit.sp < 6:
                                     selected_unit.sp += 1
                             elif (choice == 1): #attaque de base
@@ -239,6 +263,7 @@ class Game:
                                 selected_unit.sp -= 4
                                 if selected_unit.unit_type == "Jus orange":
                                     selected_unit.use_special(self.player_team.units)
+                                    self.action_messages.append(f"{enemy.unit_type} a lancé sa bomba !")
                                 else :
                                     for enemy in self.enemy_team.units:
                                         if abs(selected_unit.x - enemy.x) <= 1 and abs(selected_unit.y - enemy.y) <= 1:
@@ -252,9 +277,12 @@ class Game:
                                                 self.action_messages.append(f"{enemy.unit_type} est vaincu !")
                             elif (choice == 3): #attaque speciale 2
                                 selected_unit.sp -= 6
-                                selected_unit.use_special2(self);
+                                selected_unit.use_special2(self)
                             has_acted = True
-                            selected_unit.is_selected = False  
+                            selected_unit.is_selected = False
+                            selected_unit.is_active = False 
+                            self.flip_display()  # Mise à jour l'écran
+
 
     def handle_enemy_turn(self):
         for enemy in self.enemy_team.units:
@@ -304,8 +332,19 @@ class Game:
         self.player_team.draw(self.screen)
         self.enemy_team.draw(self.screen)
 
+        # Dessiner la console à droite (fond noir)
+        pygame.draw.rect(self.screen, (0, 0, 0), (GRID_SIZE * CELL_SIZE, 0, 300, HEIGHT))  # Rectangle noir
+
+        font = pygame.font.SysFont(None, 24)
+        y_offset = 10
+        for message in self.action_messages[-10:]:  # Affiche les 10 derniers messages
+            text_surface = font.render(message, True, (255, 255, 255))
+            self.screen.blit(text_surface, (GRID_SIZE * CELL_SIZE + 10, y_offset))
+            y_offset += 20
+
         # Mettre à jour l'affichage
         pygame.display.flip()
+
 
 
 def main():
