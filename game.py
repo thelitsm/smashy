@@ -240,20 +240,33 @@ class Game:
                 # Définir les propriétés de la case
                 if tile_type == "mur":
                     is_walkable = False
+                    image_path=None
+                if tile_type == 'miel':
+                    image_path='assets/cases/miel.png'
+                    is_walkable = True
+                if tile_type == 'eau':
+                    image_path='assets/cases/eau.png'
+                    is_walkable = True
+                if tile_type == 'vitesse':
+                    image_path='assets/cases/eclair.png'
+                    is_walkable = True
+                if tile_type == 'orange':
+                    image_path='assets/cases/orange.png'
+                    is_walkable = True
                 elif tile_type == "normal":  # Case normale
+                    image_path=None
                     is_walkable = True
 
                 # Créer l'objet `Tile`
-                tile_row.append(Tile(x, y, tile_type, is_walkable))
+                tile_row.append(Tile(x, y, tile_type, is_walkable,image_path))
             self.map.append(tile_row)
-        print(self.map)
 
         # # Définir les proportions pour les cases spéciales
         # special_tile_types = {
-        #     "infranchissable": 0.05,  # 5% de cases infranchissables
-        #     "vitaminé": 0.10,           # 10% de cases régénératrices
-        #     "huileuse": 0.07,        # 7% de cases glissantes
-        #     "mielleuse": 0.08        # 8% de cases collantes
+        #     "miel": 0.05,  # 5% de cases infranchissables
+        #     "vitesse": 0.10,           # 10% de cases régénératrices
+        #     "eau": 0.07,        # 7% de cases glissantes
+        #     "orange": 0.08        # 8% de cases collantes
         # }
 
         # # Parcourir chaque case de la grille
@@ -263,49 +276,30 @@ class Game:
         #         # Tirage aléatoire pour déterminer le type de la case
         #         random_value = random.random()
         #         tile_type = "normal"
-        #         image_path = "assets/cases/normal.png"      #case normale par défaut 
+        #         image_path = "assets/cases/normal.png"
 
-        #         if random_value < special_tile_types["infranchissable"]:
-        #             tile_type = "infranchissable"
-        #             image_path = "assets/cases/spatule.png"
-        #         elif random_value < special_tile_types["infranchissable"] + special_tile_types["vitaminé"]:
-        #             tile_type = "vitaminé"
-        #             image_path = "assets/cases/orange.png"
-        #         elif random_value < (special_tile_types["infranchissable"] +
-        #                             special_tile_types["vitaminé"] +
-        #                             special_tile_types["huileuse"]):
-        #             tile_type = "huileuse"
-        #             image_path = "assets/cases/huile.png"
-        #         elif random_value < (special_tile_types["infranchissable"] +
-        #                             special_tile_types["vitaminé"] +
-        #                             special_tile_types["huileuse"] +
-        #                             special_tile_types["mielleuse"]):
-        #             tile_type = "mielleuse"
+        #         if random_value < special_tile_types["miel"]:
+        #             tile_type = "miel"
         #             image_path = "assets/cases/miel.png"
+        #         elif random_value < special_tile_types["miel"] + special_tile_types["vitesse"]:
+        #             tile_type = "vitesse"
+        #             image_path = "assets/cases/eclair.png"
+        #         elif random_value < (special_tile_types["miel"] +
+        #                             special_tile_types["vitesse"] +
+        #                             special_tile_types["eau"]):
+        #             tile_type = "eau"
+        #             image_path = "assets/cases/eau.png"
+        #         elif random_value < (special_tile_types["miel"] +
+        #                             special_tile_types["vitesse"] +
+        #                             special_tile_types["eau"] +
+        #                             special_tile_types["orange"]):
+        #             tile_type = "orange"
+        #             image_path = "assets/cases/orange.png"
 
         #         # Ajouter la case à la ligne
-        #         row.append(Tile(x, y, tile_type, '0',image_path))
+        #         row.append(Tile(x, y, tile_type,image_path))
 
     
-    
-    # def apply_tile_effect(self, unit):
-    #     current_tile = self.map[unit.y][unit.x]
-    #     if current_tile.tile_type == "infranchissable":
-    #         print(f"{unit.unit_type} ne peut pas passer ici !")
-    #         return False
-    #     elif current_tile.tile_type == "sucré":
-    #         unit.health = min(unit.max_health, unit.health + 5)
-    #         print(f"{unit.unit_type} régénère de la santé !")
-    #     elif current_tile.tile_type == "huileuse":
-    #         print(f"{unit.unit_type} glisse sur la case !")
-    #         unit.move(random.choice([-1, 1]), random.choice([-1, 1]))
-    #     elif current_tile.tile_type == "mielleuse":
-    #         print(f"{unit.unit_type} est collé !")
-    #         unit.speed = 0
-    #     return True
-
-    
-
     def handle_player_turn(self):
         for selected_unit in self.player_team.units:
             # Définir le personnage comme actif
@@ -597,6 +591,12 @@ class Game:
                     tile_rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
                     pygame.draw.rect(self.screen, RIVER_BLUE, tile_rect)  # Remplissage bleu clair
 
+        # Dessiner les différents types de tiles 
+        for i in range(GRID_SIZE):  
+            for j in range(GRID_SIZE):  # Remplace GRID_SIZE par self.height
+                tile = self.map[i][j]
+                tile.draw(self.screen)  # Dessiner la tile seulement si elle existe
+
         # Dessiner les unités
         self.player_team.draw(self.screen)
         self.enemy_team.draw(self.screen)
@@ -617,6 +617,12 @@ class Game:
     def flip_display2(self):   #pour tour j2
         # Dessiner l'image de fond
         self.screen.blit(self.background_image, (0, 0))
+
+        # Dessiner les différents types de tiles 
+        for i in range(GRID_SIZE):  
+            for j in range(GRID_SIZE):  
+                tile = self.map[i][j]
+                tile.draw(self.screen)  # Dessiner la tile seulement si elle existe
 
         # Dessiner les tuiles accessibles pour l'unité sélectionnée
         for unit in self.enemy_team.units:
