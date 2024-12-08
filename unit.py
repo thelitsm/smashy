@@ -69,6 +69,7 @@ class Unit:
         self.max_health = health # Vie maximale pour dessiner une barre de vie
         self.sp = 0
         self.is_active = False  # Ajout de cet attribut
+        self.vision = 0 # Ajout de la vision du personnage
 
     def move(self, dx, dy):
         """
@@ -165,7 +166,24 @@ class Unit:
         pygame.draw.rect(screen, BLACK, (sp_x, sp_y, sp_bar_width, bar_height))
         # Barre Bleue (barre de sp actuelle)
         pygame.draw.rect(screen, BLUE, (sp_x, sp_y, spc_bar_width, bar_height))
-
+    
+    """def vue_equipe_hamster(self, game):
+        for enemy in game.enemy_team.units:
+            distance = math.sqrt((enemy.x - self.x)**2 + (enemy.y - self.y)**2)
+            obstruction = False
+            if game.tile == "Mur":
+            if distance > self.vision:
+                return True
+            else :
+                return False
+    def vue_equipe_bonbon(self, game):
+        for enemy in game.player_team.units:
+            distance = math.sqrt((enemy.x - self.x)**2 + (enemy.y - self.y)**2)
+            
+            if distance > self.vision
+                return True
+            else :
+                return False"""
 
 
 class HamsterGangster(Unit):
@@ -184,26 +202,39 @@ class HamsterGangster(Unit):
             unit_type="Hamster Gangster",
             speed=3, 
             attack_power=3,
-            defense=0
+            defense=1
         )
 
     def use_special(self, target):
         """
         Utilise la compétence spéciale du Hamster Gangster : "ak-noisettes".
         """
+        
         print(f"{self.unit_type} utilise son ak-noisettes sur {target.unit_type} !")
-        self.attack(target, is_special=True, coeff_attaque=1.5)
+        if random.randint(0,100) <6: #coup critique
+            self.attack(target, is_special=True, coeff_attaque=1.7)#coup critique
+            return 1
+        else:
+            self.attack(target, is_special=True, coeff_attaque=1.5)
+            return 0
+    
     def use_special2(self,game):
         print(f"{self.unit_type} utilise Nut Barrage !")
+        is_crit = 0
         for enemy in game.enemy_team.units:
             if abs(self.x - enemy.x) <= 1 and abs(self.y - enemy.y) <= 2:  # Vérifie si l'ennemi est dans le rayon
-                damage = max(0, random.randint(3,10) - enemy.defense)  # dégats démultipliés
+                if random.randint(0,100) <6: #coup critique
+                    damage = random.randint(3,10) - enemy.defense
+                    is_crit = 1
+                else :
+                    damage = random.randint(3,10) - enemy.defense  # dégats démultipliés
                 enemy.health -= damage
-                enemy.defense = max(0, enemy.defense - 1)  # Réduit la défense de 1
+                enemy.defense = max(0, enemy.defense - 1)  # Réduit la défense de 1 sans la rendre negative
                 print(f"{enemy.unit_type} subit {damage} dégâts de Nut Barrage et sa défense est réduite à {enemy.defense} !")
             if enemy.health <= 0:
                 game.enemy_team.remove_dead_units()
                 game.action_messages.append(f"{enemy.unit_type} est vaincu !")
+        return is_crit
     def draw(self, screen):
         """
         Dessine le Hamster Gangster avec ses spécificités.
@@ -266,7 +297,12 @@ class BananePlanteur(Unit):
 
     def use_special(self, target):
         print(f"{self.unit_type} utilise son sabre tropical sur {target.unit_type} !")
-        self.attack(target, is_special=True, coeff_attaque=1.5)
+        if random.randint(0,100)<6:
+            self.attack(target, is_special=True, coeff_attaque=1.7)
+            return 1
+        else:
+            self.attack(target, is_special=True, coeff_attaque=1.5)
+            return 0
 
     def use_special2(self,game):
         #bomba
@@ -293,15 +329,19 @@ class BananePlanteur(Unit):
                     game.flip_display()
                     for i in range(len(game.map)):
                         for j in range(len(game.map[0])):
-                            if (x == i and abs(y - j) < 4) or (y == j and abs(x - i) < 4):
+                            if (x == i and abs(y - j) < 3) or (y == j and abs(x - i) < 3):
                                 tile_rect = pygame.Rect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE)
                                 pygame.draw.rect(game.screen, RED, tile_rect)
                     pygame.display.flip()
                     if event.key == pygame.K_SPACE:
                         c = True
         for enemy in game.enemy_team.units:
-            if (x == enemy.x and abs(y - enemy.y) < 4) or (enemy.y == y and abs(enemy.x - x) < 4):
-                enemy.health -= 3
+            if (x == enemy.x and abs(y - enemy.y) < 3) or (enemy.y == y and abs(enemy.x - x) < 3):
+                if random.randint(0,100)<6: #crit
+                    enemy.health -= 3*2
+                    game.action_messages.append(f"CRITICAL HIT !")
+                else:
+                    enemy.health -= 3
                 if enemy.health <= 0:
                     game.enemy_team.remove_dead_units()
                     game.action_messages.append(f"{enemy.unit_type} est vaincu !")
@@ -326,7 +366,12 @@ class BonbonContaminé(Unit):
 
     def use_special(self, target):
         print(f"{self.unit_type} explose {target.unit_type} !")
-        self.attack(target, is_special=True, coeff_attaque=2)
+        if random.randint(0,100)<6: #crit
+            self.attack(target, is_special=True, coeff_attaque=2)
+            return 1
+        else :
+            self.attack(target, is_special=True, coeff_attaque=1.5)
+            return 0
 
     def use_special2(self, game):
         for ally in game.enemy_team.units:
@@ -358,15 +403,25 @@ class MeringuichToxique(Unit):
 
     def use_special(self, target):
         print(f"{self.unit_type} crache des meringues toxiques surn{target.unit_type} !")
-        self.attack(target, is_special=True, coeff_attaque=1.5)
+        if random.randint(0,100)<6: #crit
+            self.attack(target, is_special=True, coeff_attaque=1.7)
+            return 1
+        else:
+            self.attack(target, is_special=True, coeff_attaque=1.5)
+            return 0
 
 
     def use_special2(self, game):
         for enemy in game.player_team.units:
-            #LE COUP DE PIED DE JEAN CLAUDE VAN DAMME
+            #LE COUP DE PIED DE JEAN CLAUDE VAN DAMME: dégats augmentés si la cible se fait projetter contre un mur
             if abs(self.x - enemy.x) <= 1 or abs(self.y - enemy.y) <= 1:
                 n=3
-                enemy.health -= (self.attack_power+1)
+                if random.randint(0,100)<6: #crit
+                    enemy.health -= (self.attack_power+3)
+                    game.action_messages.append(f"VAN DAMME CRITICAL HIT !")
+
+                else:
+                    enemy.health -= (self.attack_power+1)
                 dx,dy = (enemy.x-self.x,enemy.y-self.y)
                 if dx != 0 and dy != 0:
                     n-=1 # si un perso est en diagonale la distance parcourue par le kick est diminuée
@@ -402,7 +457,13 @@ class SucetteVolante(Unit):
 
     def use_special(self, target):
         print(f"{self.unit_type} inflige un coup d'aile sur {target.unit_type} !")
-        self.attack(target, is_special=False, coeff_attaque=1)
+        if random.randint(6,100)<6:
+            self.attack(target, is_special=False, coeff_attaque=1.6)
+            return 1
+        else:
+            self.attack(target, is_special=False, coeff_attaque=1.2)
+            return 0
+    
     def use_special2(self,game):
         #avion bombardier
         x,y = 4,4        
@@ -429,15 +490,21 @@ class SucetteVolante(Unit):
                     for i in range(len(game.map)):
                         for j in range(len(game.map[0])):
                             a,b = i - x, j - y
-                            if (abs(a) == abs(b)) and (abs(a) + abs(b)) < 10:
+                            if (abs(a) == abs(b)) and (abs(a) + abs(b)) < 8:
                                 tile_rect = pygame.Rect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE)
                                 pygame.draw.rect(game.screen, RED, tile_rect)
                     pygame.display.flip()
                     if event.key == pygame.K_SPACE:
                         c = True
         for enemy in game.player_team.units:
-            if (x == enemy.x and abs(y - enemy.y) < 4) or (enemy.y == y and abs(enemy.x - x) < 4):
-                enemy.health -= 3
+            a,b = enemy.x - x, enemy.y - y
+            if (abs(a) == abs(b)) and (abs(a) + abs(b)) < 8:
+            
+                if random.randint(0,100)<6:
+                    enemy.health -= 3*2 #crit
+                    game.action_messages.append(f"BOMBA CRITICAL HIT !")
+                else:
+                    enemy.health -= 3*1
                 if enemy.health <= 0:
                     game.player_team.remove_dead_units()
                     game.action_messages.append(f"{enemy.unit_type} est vaincu !")

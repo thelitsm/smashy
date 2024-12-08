@@ -197,14 +197,7 @@ class Game:
         self.show_start_screen()
 
     def is_position_occupied(self, x, y):
-        """
-        Vérifie si une position (x, y) est déjà occupée par une unité.
-        
-        x : int
-            Position x de la case cible.
-        y : int
-            Position y de la case cible.
-        """
+
          # Vérifie si (x, y) est dans les limites de la carte
         if not (0 <= x < len(self.map[0]) and 0 <= y < len(self.map)):
             return True  # Considère les positions hors limites comme non accessibles
@@ -415,14 +408,16 @@ class Game:
                                 selected_unit.sp -= 4
                                 if selected_unit.unit_type == "Jus orange":
                                     selected_unit.use_special(self.player_team.units)
-                                    self.action_messages.append(f"{enemy.unit_type} a lancé sa bomba !")
+                                    self.action_messages.append(f"{enemy.unit_type} a heal ses alliers proches !")
                                 else :
                                     for enemy in self.enemy_team.units:
                                         if abs(selected_unit.x - enemy.x) <= 1 and abs(selected_unit.y - enemy.y) <= 1:
                                             damage = max(0, selected_unit.attack_power - enemy.defense)
                                             #selected_unit.use_special(enemy, False, 1)
-                                            selected_unit.use_special(enemy)
+                                            crit = selected_unit.use_special(enemy)
                                             self.action_messages.append(f"{selected_unit.unit_type} attaque {enemy.unit_type} pour {damage} dégâts !")
+                                            if (crit == 1):
+                                                self.action_messages.append(f"COUP CRITIQUENT !")
                                             self.message_timer = pygame.time.get_ticks() + 3000
                                             if enemy.health <= 0:
                                                 self.enemy_team.remove_dead_units()
@@ -551,7 +546,9 @@ class Game:
                                         if abs(selected_unit.x - enemy.x) <= 1 and abs(selected_unit.y - enemy.y) <= 1:
                                             damage = max(0, selected_unit.attack_power - enemy.defense)
                                             #selected_unit.use_special(enemy, False, 1)
-                                            selected_unit.use_special(enemy)
+                                            crit = selected_unit.use_special(enemy)
+                                            if (crit == 1):
+                                                self.action_messages.append(f"COUP CRITIQUENT !")
                                             self.action_messages.append(f"{selected_unit.unit_type} attaque {enemy.unit_type} pour {damage} dégâts !")
                                             self.message_timer = pygame.time.get_ticks() + 3000
                                             if enemy.health <= 0:
@@ -672,11 +669,14 @@ def main():
         if game.player_team.is_defeated() or game.enemy_team.is_defeated():
             # Gagnant
             if game.player_team.is_defeated():
-                #message = "Les zombibonbons dominent !"
-                message = "Les zombibonbons ont réussi 9/11 !, à cause de toi !"
+                
+                message = "Les zombibonbons dominent !"
+                
+                
             else:
-                #message = "Bravo ! Vous avez rétabli la paix !"
-                message = "BRAVO, tu as prévenu la guerre en iraq , gg wp !"
+                
+                message = "Bravo ! Vous avez rétabli la paix !"
+                
             print(message)
             pygame.time.wait(3000)
             pygame.quit()
