@@ -33,8 +33,8 @@ class Game:
         player_units[2].sp = 6
 
         enemy_units = [
-            BonbonContaminé(19,19),
-            MeringuichToxique(19,18),
+            BonbonContaminé(19,18),
+            MeringuichToxique(19,19),
             SucetteVolante(18,19)
         ]
 
@@ -196,7 +196,7 @@ class Game:
                         waiting = False
         self.show_start_screen()
 
-    def is_position_occupied(self, x, y):
+    def is_position_occupied(self, x, y, actual_unit):
         """
         Vérifie si une position (x, y) est déjà occupée par une unité.
         
@@ -215,6 +215,8 @@ class Game:
             # Vérifie si la case est franchissable
             actual_tile=self.map[y][x]
             if not actual_tile.walkable:  # Accès à la matrice de la carte
+                return True
+            if actual_tile.tile_type == 'eau' and actual_unit.unit_type not in actual_tile.allowed_characters :
                 return True
         return False
     
@@ -241,25 +243,38 @@ class Game:
                 if tile_type == "mur":
                     is_walkable = False
                     image_path=None
+                    tile_row.append(Tile(x, y, tile_type, is_walkable,image_path))
                 if tile_type == 'miel':
                     image_path='assets/cases/miel.png'
                     is_walkable = True
+                    tile_row.append(Miel(x, y, tile_type, is_walkable, image_path))
                 if tile_type == 'eau':
                     image_path='assets/cases/eau.png'
                     is_walkable = True
+                    tile_row.append(Eau(x, y, tile_type, is_walkable,image_path))
                 if tile_type == 'vitesse':
                     image_path='assets/cases/eclair.png'
                     is_walkable = True
+                    tile_row.append(Vitesse(x, y, tile_type, is_walkable,image_path))
                 if tile_type == 'orange':
                     image_path='assets/cases/orange.png'
                     is_walkable = True
+                    tile_row.append(Orange(x, y, tile_type, is_walkable,image_path))
                 elif tile_type == "normal":  # Case normale
                     image_path=None
                     is_walkable = True
+                    tile_row.append(Tile(x, y, tile_type, is_walkable,image_path))
 
-                # Créer l'objet `Tile`
-                tile_row.append(Tile(x, y, tile_type, is_walkable,image_path))
             self.map.append(tile_row)
+
+        # Dessiner les différents types de tiles 
+        for i in range(GRID_SIZE):  
+            for j in range(GRID_SIZE):  # Remplace GRID_SIZE par self.height
+                tile = self.map[i][j]
+                tile.draw(self.screen)  # Dessiner la tile seulement si elle existe
+        # Mettre à jour l'affichage
+        pygame.display.flip()
+        
 
         # # Définir les proportions pour les cases spéciales
         # special_tile_types = {
@@ -339,8 +354,8 @@ class Game:
                         # Vérifier si le mouvement est valide
                         new_x, new_y = selected_unit.x + dx, selected_unit.y + dy
                         if (new_x, new_y) in self.get_reachable_tiles(selected_unit):
-                            selected_unit.move(dx, dy)
-                            selected_unit.moves -= 1
+                            selected_unit.move(dx, dy,self)
+                            if selected_unit.moves > 0 : selected_unit.moves -= 1 
                             self.action_messages[index_of_move]= (f"{selected_unit.unit_type} a {selected_unit.moves} déplacements restants.")
                             self.flip_display()
 
@@ -469,8 +484,8 @@ class Game:
                         # Vérifier si le mouvement est valide
                         new_x, new_y = selected_unit.x + dx, selected_unit.y + dy
                         if (new_x, new_y) in self.get_reachable_tiles(selected_unit):
-                            selected_unit.move(dx, dy)
-                            selected_unit.moves -= 1
+                            selected_unit.move(dx, dy,self)
+                            if selected_unit.moves > 0 : selected_unit.moves -= 1 
                             self.action_messages[index_of_move]= (f"{selected_unit.unit_type} a {selected_unit.moves} déplacements restants.")
                             self.flip_display2()
 
@@ -558,9 +573,7 @@ class Game:
                             selected_unit.is_selected = False
                             selected_unit.is_active = False 
                             self.flip_display2()  # Mise à jour l'écran
-
-
-                        
+              
 
     def get_reachable_tiles(self, unit):
         """
@@ -574,7 +587,7 @@ class Game:
                     new_y = unit.y + dy
                     if (0 <= new_x < GRID_SIZE and 
                         0 <= new_y < GRID_SIZE and 
-                        not self.is_position_occupied(new_x, new_y) and 
+                        not self.is_position_occupied(new_x, new_y, unit) and 
                         self.map[new_y][new_x].walkable):
                         reachable_tiles.append((new_x, new_y))
         return reachable_tiles

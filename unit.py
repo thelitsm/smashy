@@ -67,19 +67,35 @@ class Unit:
         self.defense = defense  # Réduction des dégâts
         self.is_selected = False
         self.max_health = health # Vie maximale pour dessiner une barre de vie
+        self.max_speed = 6 # Vitesse maximale pour limiter les déplacements
+        self.min_speed = 1 # Vitesse minimal pour pouvoir se deplacer dans tout les cas
         self.sp = 0
         self.is_active = False  # Ajout de cet attribut
 
-    def move(self, dx, dy):
+    def move(self, dx, dy, game):
         """
-        Déplace l'unité de dx, dy en fonction de sa vitesse.
+        Déplace l'unité de dx, dy en fonction de sa vitesse et applique les effets des cases spéciales.
         """
-
         if abs(dx) + abs(dy) <= self.speed:  # Limite par la vitesse
             new_x = self.x + dx
             new_y = self.y + dy
 
             if 0 <= new_x < GRID_SIZE and 0 <= new_y < GRID_SIZE:  # Vérifie les limites de la grille
+                target_tile = game.map[new_y][new_x]
+
+                # Appliquer les effets des cases spéciales
+
+                # Applique l'effet de la case miel
+                if isinstance(target_tile, Miel):
+                    target_tile.apply_effect(self)
+                
+                # Applique l'effet de la case Orange
+                if isinstance(target_tile, Orange):
+                    target_tile.apply_effect(self)
+
+                if isinstance(target_tile, Vitesse):
+                    target_tile.apply_effect(self)
+
                 self.x = new_x
                 self.y = new_y
 
@@ -222,7 +238,7 @@ class JusOrange(Unit):
             team="player",
             health=15,
             walk_on_wall=False,
-            walk_on_water=True,
+            walk_on_water=False,
             unit_type="Jus orange",
             speed=3, 
             attack_power=2,
@@ -319,7 +335,7 @@ class BonbonContaminé(Unit):
             walk_on_wall=False,
             walk_on_water=True,
             unit_type="Bonbon Contaminé",
-            speed=1, 
+            speed=3, 
             attack_power=8,
             defense=2
         )
