@@ -32,6 +32,7 @@ class Miel(Tile):
         """
         print(f"{unit.unit_type} est bloqué sur une case de miel !")
         unit.moves = 0  # Réduit les mouvements restants à 0
+        unit.health -= 2 # Enlève deux points de vie 
 
 class Vitesse(Tile):
     def __init__(self, x, y, tile_type, is_walkable, image_path):
@@ -68,5 +69,6 @@ class Orange(Tile):
         if unit.health < unit.max_health:  # Vérifie si les HP peuvent être augmentés
             hp_adder = random.randint(1, 4)  # Ajoute des hp entre 1 et 4
             health_before = unit.health
-            unit.health = min(unit.health + hp_adder, unit.max_health)  # Limite à la santé maximale
+            unit.health = min(health_before + hp_adder, unit.max_health)  # Limite à la santé maximale
+            unit.health = max(health_before + hp_adder, 0)  # Limite à 0 HP minimum
 

@@ -88,13 +88,16 @@ class Unit:
                 # Applique l'effet de la case miel
                 if isinstance(target_tile, Miel):
                     target_tile.apply_effect(self)
+                    game.action_messages.append(f"{self.unit_type} est immobilisé par le miel, et subit 2 degats !")
                 
                 # Applique l'effet de la case Orange
                 if isinstance(target_tile, Orange):
                     target_tile.apply_effect(self)
+                    game.action_messages.append(f"{self.unit_type} bénéficie de points de vie !")
 
                 if isinstance(target_tile, Vitesse):
                     target_tile.apply_effect(self)
+                    game.action_messages.append(f"{self.unit_type} bénéficie de points de vitesse !")
 
                 self.x = new_x
                 self.y = new_y
@@ -134,53 +137,51 @@ class Unit:
             target.health -= 7  # Dégâts puissants
 
     def use_special2(self,game):
-        print(self.unit_type)                
+        print(self.unit_type)   
+
+    def get_details(self):
+        '''Récupère les statistiques d'une unité et les détails de ses attaques'''
+        details = f" - Caractéristiques du personnage: \n"
+        details += f"Vitesse: {self.speed}\n"
+        details += f"Defense: {self.defense}\n"
+        details += f"Attaques et degats: \n"
+        details += f" - Attaque Basique: {self.attack_power}\n"
+        details += f" - Special 1: {getattr(self, 'special1_description', 'No description')}\n"
+        details += f" - Special 2: {getattr(self, 'special2_description', 'No description')}\n"
+        return details          
 
     def draw(self, screen):
-        """
-        Affiche l'unité sur l'écran avec une couleur spécifique et sa barre de vie.
-        """
-
-        # Couleur spécifique pour chaque type d'unité
-        if (self.team == 'player'):
-            color = BLUE  # bleu si ton équipe
-        elif self.team == 'enemy':
-            color = RED # rouge si adversaire
-
-        # Dessiner le personnage avec son image
+        # Draw unit image
         screen.blit(self.image, (self.x * (CELL_SIZE), self.y * (CELL_SIZE)))  
 
-        # Si l'unité est active, dessiner un rectangle bleu
+        # If the unit is active, draw a rectangle
         if self.is_active:
-            c = (255,0,0)
+            c = (255, 0, 0)
             if self.team == 'player':
-                c = (0,0,255)
+                c = (0, 0, 255)
             rect = pygame.Rect(self.x * CELL_SIZE, self.y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-            pygame.draw.rect(screen, c, rect, 3)  # Rectangle bleu, épaisseur 3 pixels
+            pygame.draw.rect(screen, c, rect, 3)  # Border rectangle
 
-        # Dessiner la barre de vie
-        max_bar_width = int(CELL_SIZE * (self.max_health / 20))  # Ajuster la longueur max
+        # Draw the health bar
+        max_bar_width = int(CELL_SIZE * (self.max_health / 20))
         current_bar_width = int(max_bar_width * (self.health / self.max_health))
         bar_height = 5
-        bar_x = self.x * CELL_SIZE + (CELL_SIZE - max_bar_width) // 2  # Centrer la barre
-        bar_y = self.y * CELL_SIZE - 10  # Position au-dessus de l'unité
+        bar_x = self.x * CELL_SIZE + (CELL_SIZE - max_bar_width) // 2
+        bar_y = self.y * CELL_SIZE - 10
 
-        sp_bar_width = int(CELL_SIZE * (self.max_health / 20))   # Ajuster la longueur max
+        # Draw the special points (SP) bar
+        sp_bar_width = int(CELL_SIZE * (self.max_health / 20))
         spc_bar_width = int(sp_bar_width * (self.sp / 6))
-        bar_height = 5
-        sp_x = self.x * CELL_SIZE + (CELL_SIZE - sp_bar_width ) // 2  # Centrer la barre
-        sp_y = self.y * CELL_SIZE - 5 # Position au-dessus de l'unité
+        sp_x = self.x * CELL_SIZE + (CELL_SIZE - sp_bar_width) // 2
+        sp_y = self.y * CELL_SIZE - 5
 
+        # Health bar (red background and green foreground)
+        pygame.draw.rect(screen, RED, (bar_x, bar_y, max_bar_width, bar_height))  # Red background
+        pygame.draw.rect(screen, GREEN, (bar_x, bar_y, current_bar_width, bar_height))  # Green foreground
 
-        # Fond rouge (barre vide)
-        pygame.draw.rect(screen, RED, (bar_x, bar_y, max_bar_width, bar_height))
-        # Barre verte (barre de vie actuelle)
-        pygame.draw.rect(screen, GREEN, (bar_x, bar_y, current_bar_width, bar_height))
-
-        #Fond Noir
-        pygame.draw.rect(screen, BLACK, (sp_x, sp_y, sp_bar_width, bar_height))
-        # Barre Bleue (barre de sp actuelle)
-        pygame.draw.rect(screen, BLUE, (sp_x, sp_y, spc_bar_width, bar_height))
+        # SP bar (black background and blue foreground)
+        pygame.draw.rect(screen, BLACK, (sp_x, sp_y, sp_bar_width, bar_height))  # Black background
+        pygame.draw.rect(screen, BLUE, (sp_x, sp_y, spc_bar_width, bar_height))  # Blue foreground
 
 
 
@@ -198,10 +199,13 @@ class HamsterGangster(Unit):
             walk_on_wall=False,
             walk_on_water=False,
             unit_type="Hamster Gangster",
-            speed=3, 
+            speed=10, 
             attack_power=3,
             defense=0
         )
+        self.attaque_description = "Description"
+        self.special1_description = "Description"
+        self.spacial2_description = "Description"
 
     def use_special(self, target):
         """
@@ -240,10 +244,13 @@ class JusOrange(Unit):
             walk_on_wall=False,
             walk_on_water=False,
             unit_type="Jus orange",
-            speed=3, 
+            speed=10, 
             attack_power=2,
             defense= 4
         )
+        self.attaque_description = "Description"
+        self.special1_description = "Description"
+        self.spacial2_description = "Description"
 
     def use_special(self, targets):
         for ally in targets:
@@ -275,10 +282,13 @@ class BananePlanteur(Unit):
             walk_on_wall=False,
             walk_on_water=True,
             unit_type="Banane Planteur",
-            speed=4, 
+            speed=10, 
             attack_power=3,
             defense=1
         )
+        self.attaque_description = "Description"
+        self.special1_description = "Description"
+        self.spacial2_description = "Description"
 
     def use_special(self, target):
         print(f"{self.unit_type} utilise son sabre tropical sur {target.unit_type} !")
@@ -335,10 +345,13 @@ class BonbonContaminé(Unit):
             walk_on_wall=False,
             walk_on_water=True,
             unit_type="Bonbon Contaminé",
-            speed=3, 
+            speed=10, 
             attack_power=8,
             defense=2
         )
+        self.attaque_description = "Description"
+        self.special1_description = "Description"
+        self.spacial2_description = "Description"
 
     def use_special(self, target):
         print(f"{self.unit_type} explose {target.unit_type} !")
@@ -351,8 +364,8 @@ class BonbonContaminé(Unit):
                 ally.health += r 
         for enemy in game.player_team.units:
            if abs(self.x - enemy.x) <= 1 and abs(self.y - enemy.y) <= 1:
-                r = random.randint(1, 3)
-                ally.health -= r 
+                r = random.randint(3, 6)
+                enemy.health -= r 
     def draw(self, screen):
         super().draw(screen)
 
@@ -367,10 +380,13 @@ class MeringuichToxique(Unit):
             walk_on_wall=False,
             walk_on_water=True,
             unit_type="Meringuich Toxique",
-            speed=4, 
+            speed=10, 
             attack_power=3,
             defense=1
         )
+        self.attaque_description = "Description"
+        self.special1_description = "Description"
+        self.spacial2_description = "Description"
 
     def use_special(self, target):
         print(f"{self.unit_type} crache des meringues toxiques surn{target.unit_type} !")
@@ -386,7 +402,7 @@ class MeringuichToxique(Unit):
                 dx,dy = (enemy.x-self.x,enemy.y-self.y)
                 if dx != 0 and dy != 0:
                     n-=1 # si un perso est en diagonale la distance parcourue par le kick est diminuée
-                while not game.is_position_occupied((enemy.x + dx), enemy.y + dy) and n > 0:
+                while not game.is_position_occupied((enemy.x + dx), enemy.y + dy, self) and n > 0:
                     enemy.x += dx
                     enemy.y += dy
                     n-=1
@@ -411,10 +427,13 @@ class SucetteVolante(Unit):
             walk_on_wall=True,
             walk_on_water=True,
             unit_type="Sucette Volante",
-            speed=2, 
+            speed=10, 
             attack_power=3,
             defense=1
         )
+        self.attaque_description = "Description"
+        self.special1_description = "Description"
+        self.spacial2_description = "Description"
 
     def use_special(self, target):
         print(f"{self.unit_type} inflige un coup d'aile sur {target.unit_type} !")

@@ -353,22 +353,22 @@ class Game:
 
                         # Effectuer une attaque
                         if event.key == pygame.K_SPACE or selected_unit.moves == 0:  #ceci marque la fin du deplacement
-                            self.action_messages = [] 
-                            tile_rect = pygame.Rect(820, 10, CELL_SIZE * 12, CELL_SIZE * 5)
-                            pygame.draw.rect(self.screen, BLACK, tile_rect)
-                            pygame.display.flip()
-                            self.flip_display()
+                            #self.action_messages = [] 
+                            # tile_rect = pygame.Rect(800, 10, CELL_SIZE * 12, CELL_SIZE * 5)
+                            # pygame.draw.rect(self.screen, BLACK, tile_rect)
+                            # pygame.display.flip()
+                            #self.flip_display()
                             selected_unit.moves = 0
                             choice = -1
-                            # tile_rect = pygame.Rect(820, 10, CELL_SIZE * 10, CELL_SIZE * 5)
+                            # tile_rect = pygame.Rect(800, 10, CELL_SIZE * 10, CELL_SIZE * 5)
                             # pygame.draw.rect(self.screen, BLACK, tile_rect)
                             # pygame.display.flip()
                             self.action_messages.append(f" ")
                             self.action_messages.append("Choisissez une attaque :")
-                            self.action_messages.append(f"pressez A pour : ne rien faire")
-                            self.action_messages.append(f"pressez E pour : attaque simple")
-                            self.action_messages.append(f"pressez R pour : attaque spéciale")
-                            self.action_messages.append(f"pressez T pour : attaque spécialement spéciale")
+                            self.action_messages.append(f"A : ne rien faire")
+                            self.action_messages.append(f"E : attaque simple")
+                            self.action_messages.append(f"R : attaque spéciale")
+                            self.action_messages.append(f"T : attaque légendaire")
                             self.action_messages.append(f" ")
                             self.flip_display()                          
 
@@ -394,7 +394,7 @@ class Game:
                                             return
                                         self.flip_display()
                             self.action_messages = [] 
-                            tile_rect = pygame.Rect(820, 10, CELL_SIZE * 12, CELL_SIZE * 5)
+                            tile_rect = pygame.Rect(800, 10, CELL_SIZE * 12, CELL_SIZE * 5)
                             pygame.draw.rect(self.screen, BLACK, tile_rect)
                             pygame.display.flip()
 
@@ -484,21 +484,21 @@ class Game:
                         # Effectuer une attaque
                         if event.key == pygame.K_RETURN or selected_unit.moves == 0:  #ceci marque la fin du deplacement
                             self.action_messages = [] 
-                            tile_rect = pygame.Rect(820, 10, CELL_SIZE * 12, CELL_SIZE * 5)
+                            tile_rect = pygame.Rect(800, 10, CELL_SIZE * 12, CELL_SIZE * 5)
                             pygame.draw.rect(self.screen, BLACK, tile_rect)
                             pygame.display.flip()
                             self.flip_display2()
                             selected_unit.moves = 0
                             choice = -1
-                            tile_rect = pygame.Rect(820, 10, CELL_SIZE * 10, CELL_SIZE * 5)
+                            tile_rect = pygame.Rect(800, 10, CELL_SIZE * 10, CELL_SIZE * 5)
                             pygame.draw.rect(self.screen, BLACK, tile_rect)
                             pygame.display.flip()
                             self.action_messages.append(f" ")
                             self.action_messages.append("Choisissez une attaque :")
-                            self.action_messages.append(f"pressez U pour : ne rien faire")
-                            self.action_messages.append(f"pressez I pour : attaque simple")
-                            self.action_messages.append(f"pressez O pour : attaque spéciale")
-                            self.action_messages.append(f"pressez P pour : attaque spécialement spéciale")
+                            self.action_messages.append(f"U : ne rien faire")
+                            self.action_messages.append(f"I : attaque simple")
+                            self.action_messages.append(f"O : attaque spéciale")
+                            self.action_messages.append(f"P : attaque légendaire")
                             self.action_messages.append(f" ")
                             self.flip_display2()                          
 
@@ -524,7 +524,7 @@ class Game:
                                             return
                                         self.flip_display2()
                             self.action_messages = [] 
-                            tile_rect = pygame.Rect(820, 10, CELL_SIZE * 12, CELL_SIZE * 5)
+                            tile_rect = pygame.Rect(800, 10, CELL_SIZE * 12, CELL_SIZE * 5)
                             pygame.draw.rect(self.screen, BLACK, tile_rect)
                             pygame.display.flip()
 
@@ -583,6 +583,130 @@ class Game:
                         self.map[new_y][new_x].walkable):
                         reachable_tiles.append((new_x, new_y))
         return reachable_tiles
+    
+    def draw_game_console(self):
+        """
+        Affiche les messages d'action et les informations de l'unité sélectionnée dans le game log.
+        """
+        # Zone noire pour le log
+        pygame.draw.rect(self.screen, (0, 0, 0), (GRID_SIZE * CELL_SIZE, 0, LOG_WIDTH, HEIGHT))
+
+        font = pygame.font.SysFont(None, 24)
+        line_spacing = 24
+        y_offset = 20  # Décalage initial (descend tout le contenu du log)
+
+        # Afficher les messages d'action
+        for message in self.action_messages[-6:]:  # Limiter à 6 messages pour laisser de la place
+            text_surface = font.render(message, True, (255, 255, 255))
+            self.screen.blit(text_surface, (GRID_SIZE * CELL_SIZE + 10, y_offset))
+            y_offset += line_spacing
+
+        # Ajouter un espace avant la section info
+        y_offset = 250
+
+        # Dessiner une bordure orange autour de la section info
+        pygame.draw.rect(self.screen, (255, 165, 0), (GRID_SIZE * CELL_SIZE + 5, y_offset - 10, LOG_WIDTH - 10, y_offset + 70), 3)
+
+        # Afficher les informations de l'unité sélectionnée
+        for unit in self.player_team.units + self.enemy_team.units:
+            if unit.is_selected:
+                # Dessiner une image agrandie pour l'unité
+                log_image_size = (80, 80)  # Taille agrandie de l'image
+                enlarged_image = pygame.transform.scale(unit.image, log_image_size)
+                image_x = GRID_SIZE * CELL_SIZE + 10
+                self.screen.blit(enlarged_image, (image_x, y_offset))
+
+                # Afficher le nom aligné à droite de l'image
+                name_surface = font.render(f"{unit.unit_type}", True, (255, 153, 153))
+                name_x = image_x + log_image_size[0] + 10
+                self.screen.blit(name_surface, (name_x, y_offset))
+
+                # Dessiner les barres de vie et SP alignées verticalement
+                bar_x = name_x  # Position des barres alignées avec le nom
+                bar_y = y_offset + name_surface.get_height() + 10  # Sous le nom
+
+                # Barre de vie
+                max_bar_width = 100
+                health_bar_width = int(max_bar_width * (unit.health / unit.max_health))
+                pygame.draw.rect(self.screen, RED, (bar_x, bar_y, max_bar_width, 10))  # Barre rouge (fond)
+                pygame.draw.rect(self.screen, GREEN, (bar_x, bar_y, health_bar_width, 10))  # Barre verte (actuelle)
+
+                # Barre SP (sous la barre de vie)
+                sp_bar_width = int(max_bar_width * (unit.sp / 6))  # 6 est le max de SP
+                sp_bar_y = bar_y + 15  # Décalage vertical sous la barre de vie
+                pygame.draw.rect(self.screen, (211,211,211), (bar_x, sp_bar_y, max_bar_width, 10))  # Barre noire (fond)
+                pygame.draw.rect(self.screen, BLUE, (bar_x, sp_bar_y, sp_bar_width, 10))  # Barre bleue (actuelle)
+
+                # Passer à la ligne suivante après l'image et les barres
+                y_offset += log_image_size[1] + 20
+
+                # Afficher les statistiques restantes sous l'image
+                details = unit.get_details().split("\n")
+                for line in details:
+                    if "Vitesse:" in line or "Defense:" in line:
+                        text_surface = font.render(line, True, BLUE)  # Texte bleu pour vitesse et défense
+                    elif "Attaques et degats:" in line:
+                        text_surface = font.render(line, True, RED)  # Texte bleu pour vitesse et défense
+                    else:
+                        text_surface = font.render(line, True, (211, 211, 211))  # Texte gris clair pour le reste
+                    self.screen.blit(text_surface, (GRID_SIZE * CELL_SIZE + 10, y_offset))
+                    y_offset += line_spacing
+
+
+                break  # Une seule unité sélectionnée à la fois
+
+        pygame.display.flip()
+
+    def draw_tile_descriptions(self):
+        """
+        Affiche les descriptions des cases spéciales en bas de l'écran avec leurs images.
+        """
+        font = pygame.font.SysFont(None, 24)
+        descriptions = [
+            {
+                "name": "Miel",
+                "effect": "Bloque les unités et inflige 2 dégâts.",
+                "image": "assets/cases/miel.png"
+            },
+            {
+                "name": "Orange",
+                "effect": "Restaure aléatoirement entre 1 et 4 HP.",
+                "image": "assets/cases/orange.png"
+            },
+            {
+                "name": "Eau",
+                "effect": "Peut être traversée uniquement par jus d'orange et sucette volante.",
+                "image": "assets/cases/eau.png"
+            },
+            {
+                "name": "Vitesse",
+                "effect": "Modifie la vitesse entre -1 et +2.",
+                "image": "assets/cases/eclair.png"
+            }
+        ]
+
+        # Zone noire pour le fond
+        pygame.draw.rect(self.screen, (0, 0, 0), (800, HEIGHT - 150, WIDTH, 150))
+
+        x_offset = 810
+        y_offset = HEIGHT - 200  # Position initiale verticale
+        image_size = (40, 40)  # Taille des images des cases
+
+        for desc in descriptions:
+            # Charger et afficher l'image
+            image = pygame.image.load(desc["image"])
+            image = pygame.transform.scale(image, image_size)
+            self.screen.blit(image, (x_offset, y_offset))
+
+            # Afficher le texte de description
+            text_surface = font.render(f"{desc['name']}: {desc['effect']}", True, (255, 255, 255))
+            self.screen.blit(text_surface, (x_offset + image_size[0] + 10, y_offset + 10))
+
+            # Passer à la ligne suivante
+            y_offset += 50
+
+        pygame.display.flip()
+
 
     def flip_display(self):
         # Dessiner l'image de fond
@@ -607,17 +731,48 @@ class Game:
         self.enemy_team.draw(self.screen)
 
         # Dessiner la console à droite (fond noir)
-        pygame.draw.rect(self.screen, (0, 0, 0), (GRID_SIZE * CELL_SIZE, 0, 500, HEIGHT))  # Rectangle noir
+        self.draw_game_console()
 
-        font = pygame.font.SysFont(None, 24)
-        y_offset = 10
-        for message in self.action_messages[-10:]:  # Affiche les 10 derniers messages
-            text_surface = font.render(message, True, (255, 255, 255))
-            self.screen.blit(text_surface, (GRID_SIZE * CELL_SIZE + 10, y_offset))
-            y_offset += 20
+        # Afficher les descriptions des cases spéciales avec images
+        self.draw_tile_descriptions()
 
         # Mettre à jour l'affichage
         pygame.display.flip()
+
+    # def flip_display(self):
+    #     # Dessiner l'image de fond
+    #     self.screen.blit(self.background_image, (0, 0))
+
+    #     # Dessiner les tuiles accessibles pour l'unité sélectionnée
+    #     for unit in self.player_team.units:
+    #         if unit.is_selected:
+    #             reachable_tiles = self.get_reachable_tiles(unit)
+    #             for x, y in reachable_tiles:
+    #                 tile_rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+    #                 pygame.draw.rect(self.screen, RIVER_BLUE, tile_rect)  # Remplissage bleu clair
+
+    #     # Dessiner les différents types de tiles 
+    #     for i in range(GRID_SIZE):  
+    #         for j in range(GRID_SIZE):  # Remplace GRID_SIZE par self.height
+    #             tile = self.map[i][j]
+    #             tile.draw(self.screen)  # Dessiner la tile seulement si elle existe
+
+    #     # Dessiner les unités
+    #     self.player_team.draw(self.screen)
+    #     self.enemy_team.draw(self.screen)
+
+    #     # Dessiner la console à droite (fond noir)
+    #     pygame.draw.rect(self.screen, (0, 0, 0), (GRID_SIZE * CELL_SIZE, 0, 500, HEIGHT))  # Rectangle noir
+
+    #     font = pygame.font.SysFont(None, 24)
+    #     y_offset = 10
+    #     for message in self.action_messages[-10:]:  # Affiche les 10 derniers messages
+    #         text_surface = font.render(message, True, (255, 255, 255))
+    #         self.screen.blit(text_surface, (GRID_SIZE * CELL_SIZE + 10, y_offset))
+    #         y_offset += 20
+
+    #     # Mettre à jour l'affichage
+    #     pygame.display.flip()
 
     def flip_display2(self):   #pour tour j2
         # Dessiner l'image de fond
@@ -642,14 +797,7 @@ class Game:
         self.enemy_team.draw(self.screen)
 
         # Dessiner la console à droite (fond noir)
-        pygame.draw.rect(self.screen, (0, 0, 0), (GRID_SIZE * CELL_SIZE, 0, 500, HEIGHT))  # Rectangle noir
-
-        font = pygame.font.SysFont(None, 24)
-        y_offset = 10
-        for message in self.action_messages[-10:]:  # Affiche les 10 derniers messages
-            text_surface = font.render(message, True, (255, 255, 255))
-            self.screen.blit(text_surface, (GRID_SIZE * CELL_SIZE + 10, y_offset))
-            y_offset += 20
+        self.draw_game_console()
 
         # Mettre à jour l'affichage
         pygame.display.flip()
