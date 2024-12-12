@@ -170,7 +170,7 @@ class Game:
             "- Battez les zombibonbons pour gagner !",
             "",
             "Press M to return to the main menu.",
-            "Press Q to Quit at anytime during the game."
+            "Press ESCAPE to return to the main anytime during the game."
         ]
 
         y_offset = 100
@@ -274,46 +274,38 @@ class Game:
                 tile.draw(self.screen)  # Dessiner la tile seulement si elle existe
         # Mettre à jour l'affichage
         pygame.display.flip()
-        
 
-        # # Définir les proportions pour les cases spéciales
-        # special_tile_types = {
-        #     "miel": 0.05,  # 5% de cases infranchissables
-        #     "vitesse": 0.10,           # 10% de cases régénératrices
-        #     "eau": 0.07,        # 7% de cases glissantes
-        #     "orange": 0.08        # 8% de cases collantes
-        # }
+    def reset_game(self):
+        """
+        Réinitialise le jeu et affiche l'écran de démarrage.
+        """
+        print("Réinitialisation du jeu...")
+        self.load_map_from_json("map_config.json")  # Recharge la carte
+        self.generate_map()  # Régénère les objets Tile
 
-        # # Parcourir chaque case de la grille
-        # for y in range(GRID_SIZE):
-        #     row = []
-        #     for x in range(GRID_SIZE):
-        #         # Tirage aléatoire pour déterminer le type de la case
-        #         random_value = random.random()
-        #         tile_type = "normal"
-        #         image_path = "assets/cases/normal.png"
+        # Réinitialise les équipes et unités
+        player_units = [
+            HamsterGangster(1, 2),
+            JusOrange(0, 3),
+            BananePlanteur(0, 2)
+        ]
+        player_units[0].sp = 6
+        player_units[1].sp = 6
+        player_units[2].sp = 6
 
-        #         if random_value < special_tile_types["miel"]:
-        #             tile_type = "miel"
-        #             image_path = "assets/cases/miel.png"
-        #         elif random_value < special_tile_types["miel"] + special_tile_types["vitesse"]:
-        #             tile_type = "vitesse"
-        #             image_path = "assets/cases/eclair.png"
-        #         elif random_value < (special_tile_types["miel"] +
-        #                             special_tile_types["vitesse"] +
-        #                             special_tile_types["eau"]):
-        #             tile_type = "eau"
-        #             image_path = "assets/cases/eau.png"
-        #         elif random_value < (special_tile_types["miel"] +
-        #                             special_tile_types["vitesse"] +
-        #                             special_tile_types["eau"] +
-        #                             special_tile_types["orange"]):
-        #             tile_type = "orange"
-        #             image_path = "assets/cases/orange.png"
+        enemy_units = [
+            BonbonContaminé(19, 18),
+            MeringuichToxique(19, 19),
+            SucetteVolante(18, 19)
+        ]
+        enemy_units[0].sp = 6
+        enemy_units[1].sp = 6
+        enemy_units[2].sp = 6
 
-        #         # Ajouter la case à la ligne
-        #         row.append(Tile(x, y, tile_type,image_path))
+        self.player_team = Team('Player', player_units)
+        self.enemy_team = Team('Enemy', enemy_units)
 
+        self.show_start_screen()  # Revient à l'écran de démarrage
     
     def handle_player_turn(self):
         for selected_unit in self.player_team.units:
@@ -339,16 +331,16 @@ class Game:
 
                     if event.type == pygame.KEYDOWN:
                         dx, dy = 0, 0
-                        if event.key == pygame.K_q:
-                            pygame.quit()
-                            exit()
-                        elif event.key == pygame.K_LEFT:
+                        if event.key == pygame.K_ESCAPE:
+                            self.reset_game()
+                            return
+                        elif event.key == pygame.K_q:
                             dx = -1
-                        elif event.key == pygame.K_RIGHT:
+                        elif event.key == pygame.K_d:
                             dx = 1
-                        elif event.key == pygame.K_UP:
+                        elif event.key == pygame.K_z:
                             dy = -1
-                        elif event.key == pygame.K_DOWN:
+                        elif event.key == pygame.K_s:
                             dy = 1
 
                         # Vérifier si le mouvement est valide
@@ -374,9 +366,9 @@ class Game:
                             self.action_messages.append(f" ")
                             self.action_messages.append("Choisissez une attaque :")
                             self.action_messages.append(f"pressez A pour : ne rien faire")
-                            self.action_messages.append(f"pressez Z pour : attaque simple")
-                            self.action_messages.append(f"pressez E pour : attaque spéciale")
-                            self.action_messages.append(f"pressez R pour : attaque spécialement spéciale")
+                            self.action_messages.append(f"pressez E pour : attaque simple")
+                            self.action_messages.append(f"pressez R pour : attaque spéciale")
+                            self.action_messages.append(f"pressez T pour : attaque spécialement spéciale")
                             self.action_messages.append(f" ")
                             self.flip_display()                          
 
@@ -385,21 +377,21 @@ class Game:
                                     if ch.type == pygame.KEYDOWN:                                        
                                         if (ch.key == pygame.K_a):
                                             choice = 0
-                                        if ch.key == pygame.K_z :
+                                        if ch.key == pygame.K_e :
                                             choice = 1
-                                        if ch.key == pygame.K_e:
+                                        if ch.key == pygame.K_r:
                                             if(selected_unit.sp < 4):
                                                 self.action_messages.append(f"{selected_unit.unit_type} n'a pas cumulé assez de points spéciaux !")
                                                 break
                                             choice = 2
-                                        if ch.key == pygame.K_r:
+                                        if ch.key == pygame.K_t:
                                             if (selected_unit.sp < 6):
                                                 self.action_messages.append(f"{selected_unit.unit_type} n'a pas cumulé assez de points spéciaux !")
                                                 break
                                             choice = 3
-                                        if ch.key == pygame.K_q:
-                                          pygame.quit()   # pour pouvoir quitter meme pendant un tour
-                                          exit()
+                                        if ch.key == pygame.K_ESCAPE:
+                                            self.reset_game()
+                                            return
                                         self.flip_display()
                             self.action_messages = [] 
                             tile_rect = pygame.Rect(820, 10, CELL_SIZE * 12, CELL_SIZE * 5)
@@ -424,7 +416,7 @@ class Game:
                                 selected_unit.sp -= 4
                                 if selected_unit.unit_type == "Jus orange":
                                     selected_unit.use_special(self.player_team.units)
-                                    self.action_messages.append(f"{enemy.unit_type} a lancé sa bomba !")
+                                    self.action_messages.append(f"{selected_unit.unit_type} a lancé sa bomba !")
                                 else :
                                     for enemy in self.enemy_team.units:
                                         if abs(selected_unit.x - enemy.x) <= 1 and abs(selected_unit.y - enemy.y) <= 1:
@@ -456,7 +448,7 @@ class Game:
             self.action_messages.append(f"C'est au tour de {selected_unit.unit_type} !")
             info_deplacement = f"{selected_unit.unit_type} a {selected_unit.moves} déplacements restants."
             self.action_messages.append(info_deplacement)
-            self.action_messages.append(f"Appuyez sur ESPACE pour confirmer votre déplacement")
+            self.action_messages.append(f"Appuyez sur ENTRER pour confirmer votre déplacement")
             index_of_move = self.action_messages.index(info_deplacement)
             self.flip_display2()
             if (selected_unit.sp < 6):
@@ -469,9 +461,9 @@ class Game:
 
                     if event.type == pygame.KEYDOWN:
                         dx, dy = 0, 0
-                        if event.key == pygame.K_q:
-                            pygame.quit()
-                            exit()
+                        if event.key == pygame.K_ESCAPE:
+                            self.reset_game()
+                            return
                         elif event.key == pygame.K_LEFT:
                             dx = -1
                         elif event.key == pygame.K_RIGHT:
@@ -490,7 +482,7 @@ class Game:
                             self.flip_display2()
 
                         # Effectuer une attaque
-                        if event.key == pygame.K_SPACE or selected_unit.moves == 0:  #ceci marque la fin du deplacement
+                        if event.key == pygame.K_RETURN or selected_unit.moves == 0:  #ceci marque la fin du deplacement
                             self.action_messages = [] 
                             tile_rect = pygame.Rect(820, 10, CELL_SIZE * 12, CELL_SIZE * 5)
                             pygame.draw.rect(self.screen, BLACK, tile_rect)
@@ -498,38 +490,38 @@ class Game:
                             self.flip_display2()
                             selected_unit.moves = 0
                             choice = -1
-                            # tile_rect = pygame.Rect(820, 10, CELL_SIZE * 10, CELL_SIZE * 5)
-                            # pygame.draw.rect(self.screen, BLACK, tile_rect)
-                            # pygame.display.flip()
+                            tile_rect = pygame.Rect(820, 10, CELL_SIZE * 10, CELL_SIZE * 5)
+                            pygame.draw.rect(self.screen, BLACK, tile_rect)
+                            pygame.display.flip()
                             self.action_messages.append(f" ")
                             self.action_messages.append("Choisissez une attaque :")
-                            self.action_messages.append(f"pressez A pour : ne rien faire")
-                            self.action_messages.append(f"pressez Z pour : attaque simple")
-                            self.action_messages.append(f"pressez E pour : attaque spéciale")
-                            self.action_messages.append(f"pressez R pour : attaque spécialement spéciale")
+                            self.action_messages.append(f"pressez U pour : ne rien faire")
+                            self.action_messages.append(f"pressez I pour : attaque simple")
+                            self.action_messages.append(f"pressez O pour : attaque spéciale")
+                            self.action_messages.append(f"pressez P pour : attaque spécialement spéciale")
                             self.action_messages.append(f" ")
                             self.flip_display2()                          
 
                             while (choice == -1):
                                 for ch in pygame.event.get():
                                     if ch.type == pygame.KEYDOWN:                                        
-                                        if (ch.key == pygame.K_a):
+                                        if (ch.key == pygame.K_u):
                                             choice = 0
-                                        if ch.key == pygame.K_z :
+                                        if ch.key == pygame.K_i :
                                             choice = 1
-                                        if ch.key == pygame.K_e:
+                                        if ch.key == pygame.K_o:
                                             if(selected_unit.sp < 4):
                                                 self.action_messages.append(f"{selected_unit.unit_type} n'a pas cumulé assez de points spéciaux !")
                                                 break
                                             choice = 2
-                                        if ch.key == pygame.K_r:
+                                        if ch.key == pygame.K_p:
                                             if (selected_unit.sp < 6):
                                                 self.action_messages.append(f"{selected_unit.unit_type} n'a pas cumulé assez de points spéciaux !")
                                                 break
                                             choice = 3
-                                        if ch.key == pygame.K_q:
-                                          pygame.quit()   # pour pouvoir quitter meme pendant un tour
-                                          exit()
+                                        if ch.key == pygame.K_ESCAPE:
+                                            self.reset_game()
+                                            return
                                         self.flip_display2()
                             self.action_messages = [] 
                             tile_rect = pygame.Rect(820, 10, CELL_SIZE * 12, CELL_SIZE * 5)
