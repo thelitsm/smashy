@@ -2,11 +2,11 @@ import pygame
 import random
 
 from unit import *
-from display import *
+from abc import ABC, abstractmethod
 
 CELL_SIZE = 40
 
-class Tile:
+class AbstractTile(ABC):
     def __init__(self, x, y, tile_type, is_walkable, image_path=None, allowed_characters = ['Sucette Volante', 'Jus orange']):
         self.x = x
         self.y = y
@@ -15,14 +15,31 @@ class Tile:
         self.image_path = image_path  # Chemin de l'image de la case (optionnel)
         self.allowed_characters = allowed_characters 
 
+    @abstractmethod
+    def apply_effect(self, unit):
+        """
+        Méthode abstraite pour appliquer un effet spécifique à la tuile.
+        """
+        pass
+
     def draw(self, screen):
         if self.image_path:
-            # Redimensionner l'image pour qu'elle tienne dans une cellule
             image = pygame.image.load(self.image_path)
-            image = pygame.transform.scale(image, (CELL_SIZE, CELL_SIZE))  # Ajuste l'image à la taille de la cellule
-            screen.blit(image, (self.x * CELL_SIZE, self.y * CELL_SIZE))  # Affiche l'image à la position (x, y)
+            image = pygame.transform.scale(image, (CELL_SIZE, CELL_SIZE))
+            screen.blit(image, (self.x * CELL_SIZE, self.y * CELL_SIZE))
 
-class Miel(Tile):
+class GenericTile(AbstractTile):
+    def __init__(self, x, y, tile_type, is_walkable, image_path=None):
+        super().__init__(x, y, tile_type, is_walkable, image_path)
+
+    def apply_effect(self, unit):
+        """
+        Implémentation par défaut : aucune action spécifique.
+        """
+        pass
+
+
+class Miel(AbstractTile):
     def __init__(self, x, y, tile_type, is_walkable, image_path):
         super().__init__(x=x, y=y, tile_type = 'miel', is_walkable = True, image_path = 'assets/cases/miel.png')
 
@@ -34,7 +51,7 @@ class Miel(Tile):
         unit.moves = 0  # Réduit les mouvements restants à 0
         unit.health -= 2 # Enlève deux points de vie 
 
-class Vitesse(Tile):
+class Vitesse(AbstractTile):
     def __init__(self, x, y, tile_type, is_walkable, image_path):
         super().__init__(x=x, y=y, tile_type='vitesse', is_walkable='yes', image_path='assets/cases/eclair.png')
 
@@ -51,14 +68,21 @@ class Vitesse(Tile):
         else :
             print("t'as deja la  vitesse max ja7ech")
 
-class Eau(Tile):
+class Eau(AbstractTile):
     def __init__(self, x, y, tile_type, is_walkable, image_path):
         super().__init__(x=x, y=y, tile_type='eau', is_walkable=True, image_path='assets/cases/eau.png')
 
     def can_pass(self, character):
         return character in self.allowed_characters
+    
+    def apply_effect(self, unit):
+        """
+        Applique un effet spécifique lorsque l'unité interagit avec une case d'eau.
+        Dans ce cas, il n'y a pas d'effet particulier, sauf restriction pour certains types d'unités.
+        """
+        pass
 
-class Orange(Tile):
+class Orange(AbstractTile):
     def __init__(self, x, y, tile_type, is_walkable, image_path):
         super().__init__(x=x, y=y, tile_type='orange', is_walkable=True, image_path='assets/cases/orange.png')
 

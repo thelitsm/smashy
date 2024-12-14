@@ -4,7 +4,7 @@ import json
 
 from unit import *
 from tile import *
-from display import *
+from map import *
 
 class Game:
     """
@@ -16,9 +16,11 @@ class Game:
         self.current_message = ""
         self.message_timer = 0
         self.action_messages = []
+        self.load_map_from_json("map_config.json")  # Charge la carte
+        self.generate_map()  # Génère la carte
 
         # Charger les propriétés de la carte à partir du fichier JSON
-        self.load_map_from_json("map_config.json")
+        self.map = Map("map_config.json")  # Chargement via la classe Map
 
         # Initialisation des unités
         BASE_PATH_CARACTERS = 'assets/persos/'
@@ -156,7 +158,55 @@ class Game:
             pygame.display.flip()
             pygame.time.delay(30)
 
+    def show_end_screen(self, winner):
+        """
+        Affiche la page de fin avec le vainqueur.
+        """
+        self.screen.fill((0, 0, 0))  # Fond noir
 
+        # Définir les polices
+        font_title = pygame.font.Font(None, 72)
+        font_text = pygame.font.Font(None, 48)
+
+        # Texte du vainqueur
+        title_text = f"Félicitations à l'équipe {winner} !" if winner != "Draw" else "C'est un match nul !"
+        title_surface = font_title.render(title_text, True, (255, 255, 255))
+
+        # Texte d'options
+        replay_text = font_text.render("Appuyez sur R pour rejouer", True, (255, 255, 255))
+        quit_text = font_text.render("Appuyez sur Q pour quitter", True, (255, 255, 255))
+
+        # Positionner les textes au centre de l'écran
+        title_x = self.screen.get_width() // 2 - title_surface.get_width() // 2
+        title_y = self.screen.get_height() // 3
+
+        replay_x = self.screen.get_width() // 2 - replay_text.get_width() // 2
+        replay_y = title_y + 100
+
+        quit_x = self.screen.get_width() // 2 - quit_text.get_width() // 2
+        quit_y = replay_y + 50
+
+        # Afficher les textes
+        self.screen.blit(title_surface, (title_x, title_y))
+        self.screen.blit(replay_text, (replay_x, replay_y))
+        self.screen.blit(quit_text, (quit_x, quit_y))
+
+        pygame.display.flip()
+
+        # Attente pour rejouer ou quitter
+        waiting = True
+        while waiting:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_r:  # Rejouer
+                        self.reset_game()  # Réinitialiser le jeu
+                        waiting = False
+                    elif event.key == pygame.K_q:  # Quitter
+                        pygame.quit()
+                        exit()
 
     def show_instructions(self):
         self.screen.fill((0, 0, 0))  # Fond noir
@@ -164,9 +214,11 @@ class Game:
 
         instructions = [
             "Comment jouer :",
-            "- Déplacez votre personnage avec les flèches directionnelles.",
+            "- Joueur 1 : Déplacez votre personnage avec les Z, Q, S, D.",
             "- Appuyez sur ESPACE pour valider votre déplacement.",
-            "- Choisissez une attaque ou une action spéciale.",
+            "- Joueur 2 : Déplacez votre personnage avec les flèches directionnelles.",
+            "- Appuyez sur ENTRER pour valider votre déplacement.",
+            "- Choisissez une attaque ou une action spéciale en suivant les touches indiquées.",
             "- Battez les zombibonbons pour gagner !",
             "",
             "Press M to return to the main menu.",
@@ -224,6 +276,7 @@ class Game:
         """
         Charge la matrice de la carte à partir d'un fichier JSON.
         """
+    
         with open(file_path, "r") as file:
             self.map_matrix = json.load(file)["map"]
 
@@ -243,7 +296,7 @@ class Game:
                 if tile_type == "mur":
                     is_walkable = False
                     image_path=None
-                    tile_row.append(Tile(x, y, tile_type, is_walkable,image_path))
+                    tile_row.append(GenericTile(x, y, tile_type, is_walkable,image_path))
                 if tile_type == 'miel':
                     image_path='assets/cases/miel.png'
                     is_walkable = True
@@ -263,7 +316,7 @@ class Game:
                 elif tile_type == "normal":  # Case normale
                     image_path=None
                     is_walkable = True
-                    tile_row.append(Tile(x, y, tile_type, is_walkable,image_path))
+                    tile_row.append(GenericTile(x, y, tile_type, is_walkable,image_path))
 
             self.map.append(tile_row)
 
@@ -415,7 +468,7 @@ class Game:
                             elif (choice == 2):#attaque speciale 1
                                 selected_unit.sp -= 4
                                 if selected_unit.unit_type == "Jus orange":
-                                    selected_unit.use_special(self.player_team.units)
+                                    selected_unit.use_special(self.player_team.units,self)
                                     self.action_messages.append(f"{selected_unit.unit_type} a lancé sa bomba !")
                                 else :
                                     for enemy in self.enemy_team.units:
@@ -435,7 +488,6 @@ class Game:
                             selected_unit.is_selected = False
                             selected_unit.is_active = False 
                             self.flip_display()  # Mise à jour l'écran
-
 
     def handle_player2_turn(self):
         for selected_unit in self.enemy_team.units:
@@ -545,7 +597,7 @@ class Game:
                             elif (choice == 2):#attaque speciale 1
                                 selected_unit.sp -= 4
                                 if selected_unit.unit_type == "Jus orange":
-                                    selected_unit.use_special(self.enemy_team.units)
+                                    selected_unit.use_special(self.enemy_team.units,self)
                                     self.action_messages.append(f"{enemy.unit_type} a lancé sa bomba !")
                                 else :
                                     for enemy in self.player_team.units:
@@ -566,7 +618,6 @@ class Game:
                             selected_unit.is_active = False 
                             self.flip_display2()  # Mise à jour l'écran
               
-
     def get_reachable_tiles(self, unit):
         """
         Retourne toutes les cases accessibles par une unité en fonction de sa vitesse.
@@ -707,7 +758,6 @@ class Game:
 
         pygame.display.flip()
 
-
     def flip_display(self):
         # Dessiner l'image de fond
         self.screen.blit(self.background_image, (0, 0))
@@ -738,42 +788,7 @@ class Game:
 
         # Mettre à jour l'affichage
         pygame.display.flip()
-
-    # def flip_display(self):
-    #     # Dessiner l'image de fond
-    #     self.screen.blit(self.background_image, (0, 0))
-
-    #     # Dessiner les tuiles accessibles pour l'unité sélectionnée
-    #     for unit in self.player_team.units:
-    #         if unit.is_selected:
-    #             reachable_tiles = self.get_reachable_tiles(unit)
-    #             for x, y in reachable_tiles:
-    #                 tile_rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-    #                 pygame.draw.rect(self.screen, RIVER_BLUE, tile_rect)  # Remplissage bleu clair
-
-    #     # Dessiner les différents types de tiles 
-    #     for i in range(GRID_SIZE):  
-    #         for j in range(GRID_SIZE):  # Remplace GRID_SIZE par self.height
-    #             tile = self.map[i][j]
-    #             tile.draw(self.screen)  # Dessiner la tile seulement si elle existe
-
-    #     # Dessiner les unités
-    #     self.player_team.draw(self.screen)
-    #     self.enemy_team.draw(self.screen)
-
-    #     # Dessiner la console à droite (fond noir)
-    #     pygame.draw.rect(self.screen, (0, 0, 0), (GRID_SIZE * CELL_SIZE, 0, 500, HEIGHT))  # Rectangle noir
-
-    #     font = pygame.font.SysFont(None, 24)
-    #     y_offset = 10
-    #     for message in self.action_messages[-10:]:  # Affiche les 10 derniers messages
-    #         text_surface = font.render(message, True, (255, 255, 255))
-    #         self.screen.blit(text_surface, (GRID_SIZE * CELL_SIZE + 10, y_offset))
-    #         y_offset += 20
-
-    #     # Mettre à jour l'affichage
-    #     pygame.display.flip()
-
+ 
     def flip_display2(self):   #pour tour j2
         # Dessiner l'image de fond
         self.screen.blit(self.background_image, (0, 0))
@@ -807,8 +822,6 @@ class Game:
 
 
 
-
-
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -824,9 +837,6 @@ def main():
     game = Game(screen)
     game.show_start_screen()
 
-
-
-
     while True:
         game.handle_player_turn()
         if not game.enemy_team.is_defeated():
@@ -834,15 +844,13 @@ def main():
         if game.player_team.is_defeated() or game.enemy_team.is_defeated():
             # Gagnant
             if game.player_team.is_defeated():
-                #message = "Les zombibonbons dominent !"
-                message = "Les zombibonbons ont réussi 9/11 !, à cause de toi !"
+                winner = "Player2"
+q
             else:
-                #message = "Bravo ! Vous avez rétabli la paix !"
-                message = "BRAVO, tu as prévenu la guerre en iraq , gg wp !"
-            print(message)
-            pygame.time.wait(3000)
-            pygame.quit()
-            exit()
+                winner = "Player1"
+
+            # Afficher l'écran de fin
+            game.show_end_screen(winner)
 
 if __name__ == "__main__":
     main()

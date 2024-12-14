@@ -22,34 +22,6 @@ VALLEY_GREEN =(144,238,144)  #ajout de la couleur de l'herbe(le sol) pour la car
 
 
 class Unit:
-    """
-    Classe pour représenter une unité.
-
-    ...
-    Attributs
-    ---------
-    x : int
-        La position x de l'unité sur la grille.
-    y : int
-        La position y de l'unité sur la grille.
-    health : int
-        La santé de l'unité.
-    attack_power : int
-        La puissance d'attaque de l'unité.
-    team : str
-        L'équipe de l'unité ('player' ou 'enemy').
-    is_selected : bool
-        Si l'unité est sélectionnée ou non.
-
-    Méthodes
-    --------
-    move(dx, dy)
-        Déplace l'unité de dx, dy.
-    attack(target)
-        Attaque une unité cible.
-    draw(screen)
-        Dessine l'unité sur la grille.
-    """
 
     def __init__(self, image_path, x, y, team, health, walk_on_wall, walk_on_water, unit_type, speed, attack_power, defense):
 
@@ -62,14 +34,14 @@ class Unit:
         self.walk_on_water = walk_on_water
         self.unit_type = unit_type  # Type de l'unité
         self.speed = speed  # Vitesse de déplacement
-        self.moves = 0
-        self.attack_power = attack_power
+        self.moves = 0 # reste de mouvements possibles
+        self.attack_power = attack_power # statistique d'attaque
         self.defense = defense  # Réduction des dégâts
-        self.is_selected = False
+        self.is_selected = False # est selectionné ?
         self.max_health = health # Vie maximale pour dessiner une barre de vie
         self.max_speed = 6 # Vitesse maximale pour limiter les déplacements
         self.min_speed = 1 # Vitesse minimal pour pouvoir se deplacer dans tout les cas
-        self.sp = 0
+        self.sp = 0 # Points sur la barre spéciale
         self.is_active = False  # Ajout de cet attribut
 
     def move(self, dx, dy, game):
@@ -83,8 +55,6 @@ class Unit:
             if 0 <= new_x < GRID_SIZE and 0 <= new_y < GRID_SIZE:  # Vérifie les limites de la grille
                 target_tile = game.map[new_y][new_x]
 
-                # Appliquer les effets des cases spéciales
-
                 # Applique l'effet de la case miel
                 if isinstance(target_tile, Miel):
                     target_tile.apply_effect(self)
@@ -95,6 +65,7 @@ class Unit:
                     target_tile.apply_effect(self)
                     game.action_messages.append(f"{self.unit_type} bénéficie de points de vie !")
 
+                # Applique l'effet de la case éclair
                 if isinstance(target_tile, Vitesse):
                     target_tile.apply_effect(self)
                     game.action_messages.append(f"{self.unit_type} bénéficie de points de vitesse !")
@@ -104,7 +75,7 @@ class Unit:
 
     def attack(self, target, is_special, coeff_attaque):
         """
-        Attaque une unité cible.
+        Attaque une unité cible avec/sans coefficient.
         """
         if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
             damage = self.attack_power
@@ -112,35 +83,10 @@ class Unit:
                 damage *= coeff_attaque  # multiplie les dégâts en mode spécial
             target.health -= max(0, damage - target.defense)  # Réduction par la défense
 
-    def use_special(self, target):
-        """
-        Utilise une compétence spéciale.
-        """
-        if self.unit_type == 'Banane Planteur':
-            print("Banane Planteur utilise son Coup de Sabre Tropical !")
-            self.attack(target, is_special=True, coeff_attaque=1.2)
-        elif self.unit_type == 'Jus orange':
-            print("le jus d'orange lance des mini vitamines revitalisants !")
-            target.health += 5  # Soigne un allié et lui ajoute 5 hp
-        elif self.unit_type == 'Hamster Gangster':
-            print("Hamster Gangster utilise son ak-noisettes !")
-            self.attack(target, is_special=True, coeff_attaque=1.5)
-        # elif self.unit_type == 'Bonbon Contaminé':
-        #     print("Bonbon Contaminé explose dans un nuage de sucre !")
-        #     target.health -= 5  # Inflige des dégâts à la zone
-        #     self.health = 0  # Se détruit après l'explosion
-        elif self.unit_type == 'Meringuich Zombie':
-            print("Meringuich Zombie crache des meringues toxiques !")
-            target.health -= 3  # Inflige des dégâts à un seul ennemi
-        elif self.unit_type == 'Sucette Volante':
-            print("Sucette Volante fonce sur sa cible !")
-            target.health -= 7  # Dégâts puissants
-
-    def use_special2(self,game):
-        print(self.unit_type)   
-
     def get_details(self):
-        '''Récupère les statistiques d'une unité et les détails de ses attaques'''
+        '''
+        Récupère les statistiques d'une unité et les détails de ses attaques pour avoir un affichage complet
+        '''
         details = f" - Caractéristiques du personnage: \n"
         details += f"Vitesse: {self.speed}\n"
         details += f"Defense: {self.defense}\n"
@@ -151,39 +97,43 @@ class Unit:
         return details          
 
     def draw(self, screen):
-        # Draw unit image
+        '''
+        dessine l'unité
+        '''
+        # dessine l'unité
         screen.blit(self.image, (self.x * (CELL_SIZE), self.y * (CELL_SIZE)))  
 
-        # If the unit is active, draw a rectangle
+        # si l'unité est active, dessine un rectangle
         if self.is_active:
             c = (255, 0, 0)
             if self.team == 'player':
                 c = (0, 0, 255)
             rect = pygame.Rect(self.x * CELL_SIZE, self.y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-            pygame.draw.rect(screen, c, rect, 3)  # Border rectangle
+            pygame.draw.rect(screen, c, rect, 3) 
 
-        # Draw the health bar
+        # Dessine la barre de vie
         max_bar_width = int(CELL_SIZE * (self.max_health / 20))
         current_bar_width = int(max_bar_width * (self.health / self.max_health))
         bar_height = 5
         bar_x = self.x * CELL_SIZE + (CELL_SIZE - max_bar_width) // 2
         bar_y = self.y * CELL_SIZE - 10
 
-        # Draw the special points (SP) bar
+        # Dessine la barre des point spéciaux
         sp_bar_width = int(CELL_SIZE * (self.max_health / 20))
         spc_bar_width = int(sp_bar_width * (self.sp / 6))
         sp_x = self.x * CELL_SIZE + (CELL_SIZE - sp_bar_width) // 2
         sp_y = self.y * CELL_SIZE - 5
 
-        # Health bar (red background and green foreground)
-        pygame.draw.rect(screen, RED, (bar_x, bar_y, max_bar_width, bar_height))  # Red background
-        pygame.draw.rect(screen, GREEN, (bar_x, bar_y, current_bar_width, bar_height))  # Green foreground
+        # Barre de vie (rouge en fond et vert en premier plan
+        pygame.draw.rect(screen, RED, (bar_x, bar_y, max_bar_width, bar_height))  # fond rouge
+        pygame.draw.rect(screen, GREEN, (bar_x, bar_y, current_bar_width, bar_height))  # premier plan vert
 
-        # SP bar (black background and blue foreground)
-        pygame.draw.rect(screen, BLACK, (sp_x, sp_y, sp_bar_width, bar_height))  # Black background
-        pygame.draw.rect(screen, BLUE, (sp_x, sp_y, spc_bar_width, bar_height))  # Blue foreground
+        # Barre spéciale
+        pygame.draw.rect(screen, BLACK, (sp_x, sp_y, sp_bar_width, bar_height))  # fond noir
+        pygame.draw.rect(screen, BLUE, (sp_x, sp_y, spc_bar_width, bar_height))  # premier plan bleu
 
 
+# on crée des sous classes héritées de unit pour chacun des 6 personnages du jeu (relation d'heritage)
 
 class HamsterGangster(Unit):
     def __init__(self, x, y):
@@ -199,7 +149,7 @@ class HamsterGangster(Unit):
             walk_on_wall=False,
             walk_on_water=False,
             unit_type="Hamster Gangster",
-            speed=10, 
+            speed=6, 
             attack_power=3,
             defense=0
         )
@@ -211,9 +161,12 @@ class HamsterGangster(Unit):
         """
         Utilise la compétence spéciale du Hamster Gangster : "ak-noisettes".
         """
-        #print(f"{self.unit_type} utilise son ak-noisettes sur {target.unit_type} !")
         self.attack(target, is_special=True, coeff_attaque=1.5)
+
     def use_special2(self,game):
+        """
+        Utilise la compétence légendaire du Hamster Gangster : "nut-barrage".
+        """
         game.action_messages.append(f"{self.unit_type} utilise Nut Barrage !")
         for enemy in game.enemy_team.units:
             if abs(self.x - enemy.x) <= 2 and abs(self.y - enemy.y) <= 2:  # Vérifie si l'ennemi est dans le rayon
@@ -224,6 +177,7 @@ class HamsterGangster(Unit):
             if enemy.health <= 0:
                 game.enemy_team.remove_dead_units()
                 game.action_messages.append(f"{enemy.unit_type} est vaincu !")
+
     def draw(self, screen):
         """
         Dessine le Hamster Gangster avec ses spécificités.
@@ -252,23 +206,35 @@ class JusOrange(Unit):
         self.special1_description = "Soigne ses alliés aléatoirement de 2 à 5 HP !"
         self.special2_description = "Soigne/pulvérise de 1 à 3 aléatoirement !"
 
-    def use_special(self, targets):
+    def use_special(self, targets, game):
+        """
+        Utilise la compétence spéciale du Jus d'Orange: "soigne les alliés entre 2 et 5 HP".
+        """
         for ally in targets:
             if abs(self.x - ally.x) <= 1 and abs(self.y - ally.y) <= 1:
                 r = random.randint(2, 5)
                 ally.health += r
-                print(f"{self.unit_type} soigne {ally.unit_type} de {r} pv !")
+                game.action_messages.append(f"{self.unit_type} soigne {ally.unit_type} de {r} pv !")
+                
     def use_special2(self, game):
+        """
+        Utilise la compétence légendaire du Jus d'Orange: "Soigne/pulvérise de 1 à 3 aléatoirement".
+        """
         for ally in game.player_team.units:
            if abs(self.x - ally.x) <= 1 and abs(self.y - ally.y) <= 1:
                 r = random.randint(1, 3)
                 ally.health += r 
+                game.action_messages.append(f"{self.unit_type} soigne {ally.unit_type} de {r} pv !")
         for enemy in game.enemy_team.units:
            if abs(self.x - enemy.x) <= 1 and abs(self.y - enemy.y) <= 1:
                 r = random.randint(1, 3)
                 ally.health -= r 
-    def draw(self, screen):
+                game.action_messages.append(f"{self.unit_type} pulvérise {enemy.unit_type} de {r} pv !")
 
+    def draw(self, screen):
+        """
+        Dessine le Jus d'Orange avec ses spécificités.
+        """
         super().draw(screen)
 
 class BananePlanteur(Unit):
@@ -290,11 +256,17 @@ class BananePlanteur(Unit):
         self.special1_description = "Utilise son sabre tropical x1.5"
         self.special2_description = "Bomba : parachute une bombe à distance ! "
 
-    def use_special(self, target):
-        #print(f"{self.unit_type} utilise son sabre tropical sur {target.unit_type} !")
+    def use_special(self, target,game):
+        """
+        Utilise la compétence spéciale de la Banane Planteur: "Utilise son sabre tropical x1.5".
+        """
         self.attack(target, is_special=True, coeff_attaque=1.5)
+        game.action_messages.append(f"{self.unit_type} utilise son sabre tropical sur {target.unit_type} !")
 
     def use_special2(self,game):
+        """
+        Utilise la compétence légendaire de la Banane Planteur: "Bomba : parachute une bombe à distance !".
+        """
         #bomba
         x,y = 9,9        
         c = False
@@ -328,7 +300,9 @@ class BananePlanteur(Unit):
                 if enemy.health <= 0:
                     game.enemy_team.remove_dead_units()
                     game.action_messages.append(f"{enemy.unit_type} est vaincu !")
+
     def draw(self, screen):
+        
         super().draw(screen)
 
 class BonbonContaminé(Unit):
@@ -347,23 +321,35 @@ class BonbonContaminé(Unit):
             defense=2
         )
         self.attaque_description = "Coup de poing"
-        self.special1_description = "Coup carambarisé"
+        self.special1_description = "Coup carambarisé x2"
         self.special2_description = "Explosion sucrée: soigne ses alliés \n et contamine ses enemis"
 
-    def use_special(self, target):
-        print(f"{self.unit_type} explose {target.unit_type} !")
+    def use_special(self, target, game):
+        """
+        Utilise la compétence spéciale du Bonbon Contaminé: "Coup carambarisé x2".
+        """
         self.attack(target, is_special=True, coeff_attaque=2)
+        game.action_messages.append(f"{self.unit_type} explose {target.unit_type} !")
 
     def use_special2(self, game):
+        """
+        Utilise la compétence légendaire du Bonbon Contaminé: "Explosion sucrée: soigne ses alliés \n et contamine ses enemis".
+        """  
         for ally in game.enemy_team.units:
            if abs(self.x - ally.x) <= 1 and abs(self.y - ally.y) <= 1:
                 r = random.randint(1, 3)
                 ally.health += r 
+                game.action_messages.append(f"{self.unit_type} soigne {ally.unit_type} de {r} pv !")
         for enemy in game.player_team.units:
            if abs(self.x - enemy.x) <= 1 and abs(self.y - enemy.y) <= 1:
                 r = random.randint(3, 6)
                 enemy.health -= r 
+                game.action_messages.append(f"{self.unit_type} pulvérive {enemy.unit_type} de {r} pv !")
+
     def draw(self, screen):
+        """
+        Dessine le BonbonContaminé avec ses spécificités.
+        """
         super().draw(screen)
 
 class MeringuichToxique(Unit):
@@ -385,12 +371,18 @@ class MeringuichToxique(Unit):
         self.special1_description = "Craache des meringues toxiques"
         self.special2_description = "Coup de pied de Jean Claude VD"
 
-    def use_special(self, target):
-        print(f"{self.unit_type} crache des meringues toxiques surn{target.unit_type} !")
+    def use_special(self, target, game):
+        """
+        Utilise la compétence spéciale de Meringuich Toxique: "Crache des meringues toxiques".
+        """
         self.attack(target, is_special=True, coeff_attaque=1.5)
+        game.action_messages.append(f"{self.unit_type} crache des meringues toxiques surn{target.unit_type} !")
 
 
     def use_special2(self, game):
+        """
+        Utilise la compétence légendaire de Meringuich Toxique: "Coup de pied de Jean Claude VD".
+        """
         for enemy in game.player_team.units:
             #LE COUP DE PIED DE JEAN CLAUDE VAN DAMME
             if abs(self.x - enemy.x) <= 1 or abs(self.y - enemy.y) <= 1:
@@ -411,6 +403,9 @@ class MeringuichToxique(Unit):
                     
 
     def draw(self, screen):
+        """
+        Dessine le Meringuich Toxique avec ses spécificités.
+        """
         super().draw(screen)
 
 class SucetteVolante(Unit):
@@ -432,10 +427,17 @@ class SucetteVolante(Unit):
         self.special1_description = "Coup d'aile"
         self.special2_description = "Paquet de sucettes explosives volantes"
 
-    def use_special(self, target):
-        print(f"{self.unit_type} inflige un coup d'aile sur {target.unit_type} !")
+    def use_special(self, target,game):
+        """
+        Utilise la compétence spéciale de la Sucette Volante: "Coup d'aile".
+        """
         self.attack(target, is_special=True, coeff_attaque=2)
+        game.action_messages.append(f"{self.unit_type} inflige un coup d'aile sur {target.unit_type} !")
+
     def use_special2(self,game):
+        """
+        Utilise la compétence spéciale de la Sucette Volante: "Paquet de sucettes explosives volantes".
+        """
         #avion bombardier
         x,y = 9,9        
         c = False
@@ -473,11 +475,14 @@ class SucetteVolante(Unit):
                     game.player_team.remove_dead_units()
                     game.action_messages.append(f"{enemy.unit_type} est vaincu !")
     def draw(self, screen):
-        super().draw(screen)
-    def draw(self, screen):
+        """
+        Dessine la Sucette Volante avec ses spécificités.
+        """
         super().draw(screen)
         
-
+# Agrégation entre Unit et Team :
+# Les unités sont regroupées au sein d'une équipe, mais elles conservent leur autonomie.
+# Cela permet une gestion claire des interactions et des états des équipes dans le jeu
         
 class Team:
     """
