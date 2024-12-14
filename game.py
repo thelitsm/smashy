@@ -845,7 +845,6 @@ def main():
             # Gagnant
             if game.player_team.is_defeated():
                 winner = "Player2"
-q
             else:
                 winner = "Player1"
 
