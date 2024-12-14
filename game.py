@@ -675,7 +675,7 @@ class Game:
             },
             {
                 "name": "Eau",
-                "effect": "Peut être traversée uniquement par jus d'orange et sucette volante.",
+                "effect": "Traversable par jus d\'orange et sucette volante.",
                 "image": "assets/cases/eau.png"
             },
             {
@@ -798,6 +798,9 @@ class Game:
 
         # Dessiner la console à droite (fond noir)
         self.draw_game_console()
+
+        # Afficher les descriptions des cases spéciales avec images
+        self.draw_tile_descriptions()
 
         # Mettre à jour l'affichage
         pygame.display.flip()

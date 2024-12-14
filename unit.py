@@ -146,8 +146,8 @@ class Unit:
         details += f"Defense: {self.defense}\n"
         details += f"Attaques et degats: \n"
         details += f" - Attaque Basique: {self.attack_power}\n"
-        details += f" - Special 1: {getattr(self, 'special1_description', 'No description')}\n"
-        details += f" - Special 2: {getattr(self, 'special2_description', 'No description')}\n"
+        details += f" - Special 1: {getattr(self, 'special1_description', {self.special1_description})}\n"
+        details += f" - Special 2: {getattr(self, 'special2_description', {self.special2_description})}\n"
         return details          
 
     def draw(self, screen):
@@ -203,24 +203,24 @@ class HamsterGangster(Unit):
             attack_power=3,
             defense=0
         )
-        self.attaque_description = "Description"
-        self.special1_description = "Description"
-        self.spacial2_description = "Description"
+        self.attaque_description = "Morsure"
+        self.special1_description = "Tire avec son Ak-noisettes"
+        self.special2_description = "Nut Barrage : multiplie les dégats \n et réduit de 1 la défense des ennemis"
 
     def use_special(self, target):
         """
         Utilise la compétence spéciale du Hamster Gangster : "ak-noisettes".
         """
-        print(f"{self.unit_type} utilise son ak-noisettes sur {target.unit_type} !")
+        #print(f"{self.unit_type} utilise son ak-noisettes sur {target.unit_type} !")
         self.attack(target, is_special=True, coeff_attaque=1.5)
     def use_special2(self,game):
-        print(f"{self.unit_type} utilise Nut Barrage !")
+        game.action_messages.append(f"{self.unit_type} utilise Nut Barrage !")
         for enemy in game.enemy_team.units:
-            if abs(self.x - enemy.x) <= 1 and abs(self.y - enemy.y) <= 2:  # Vérifie si l'ennemi est dans le rayon
+            if abs(self.x - enemy.x) <= 2 and abs(self.y - enemy.y) <= 2:  # Vérifie si l'ennemi est dans le rayon
                 damage = max(0, random.randint(3,10) - enemy.defense)  # dégats démultipliés
                 enemy.health -= damage
                 enemy.defense = max(0, enemy.defense - 1)  # Réduit la défense de 1
-                print(f"{enemy.unit_type} subit {damage} dégâts de Nut Barrage et sa défense est réduite à {enemy.defense} !")
+                game.action_messages.append(f"{enemy.unit_type} subit {damage} dégâts de Nut Barrage et sa défense est réduite à {enemy.defense} !")
             if enemy.health <= 0:
                 game.enemy_team.remove_dead_units()
                 game.action_messages.append(f"{enemy.unit_type} est vaincu !")
@@ -248,9 +248,9 @@ class JusOrange(Unit):
             attack_power=2,
             defense= 4
         )
-        self.attaque_description = "Description"
-        self.special1_description = "Description"
-        self.spacial2_description = "Description"
+        self.attaque_description = "Coup de paille"
+        self.special1_description = "Soigne ses alliés aléatoirement de 2 à 5 HP !"
+        self.special2_description = "Soigne/pulvérise de 1 à 3 aléatoirement !"
 
     def use_special(self, targets):
         for ally in targets:
@@ -286,17 +286,17 @@ class BananePlanteur(Unit):
             attack_power=3,
             defense=1
         )
-        self.attaque_description = "Description"
-        self.special1_description = "Description"
-        self.spacial2_description = "Description"
+        self.attaque_description = "Coup de banane"
+        self.special1_description = "Utilise son sabre tropical x1.5"
+        self.special2_description = "Bomba : parachute une bombe à distance ! "
 
     def use_special(self, target):
-        print(f"{self.unit_type} utilise son sabre tropical sur {target.unit_type} !")
+        #print(f"{self.unit_type} utilise son sabre tropical sur {target.unit_type} !")
         self.attack(target, is_special=True, coeff_attaque=1.5)
 
     def use_special2(self,game):
         #bomba
-        x,y = 4,4        
+        x,y = 9,9        
         c = False
         while (not c):
             for event in pygame.event.get():
@@ -305,16 +305,13 @@ class BananePlanteur(Unit):
                     exit()
 
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
-                        pygame.quit()
-                        exit()
-                    elif event.key == pygame.K_LEFT and x > 0:
+                    if event.key == pygame.K_q and x > 0:
                         x -= 1
-                    elif event.key == pygame.K_RIGHT and x < GRID_SIZE - 1:
+                    elif event.key == pygame.K_d and x < GRID_SIZE - 1:
                         x += 1
-                    elif event.key == pygame.K_UP and y > 0:
+                    elif event.key == pygame.K_z and y > 0:
                         y -= 1
-                    elif event.key == pygame.K_DOWN and y < GRID_SIZE - 1:
+                    elif event.key == pygame.K_s and y < GRID_SIZE - 1:
                         y += 1
                     game.flip_display()
                     for i in range(len(game.map)):
@@ -346,12 +343,12 @@ class BonbonContaminé(Unit):
             walk_on_water=True,
             unit_type="Bonbon Contaminé",
             speed=10, 
-            attack_power=8,
+            attack_power=6,
             defense=2
         )
-        self.attaque_description = "Description"
-        self.special1_description = "Description"
-        self.spacial2_description = "Description"
+        self.attaque_description = "Coup de poing"
+        self.special1_description = "Coup carambarisé"
+        self.special2_description = "Explosion sucrée: soigne ses alliés \n et contamine ses enemis"
 
     def use_special(self, target):
         print(f"{self.unit_type} explose {target.unit_type} !")
@@ -384,9 +381,9 @@ class MeringuichToxique(Unit):
             attack_power=3,
             defense=1
         )
-        self.attaque_description = "Description"
-        self.special1_description = "Description"
-        self.spacial2_description = "Description"
+        self.attaque_description = "Coup de chantilly"
+        self.special1_description = "Craache des meringues toxiques"
+        self.special2_description = "Coup de pied de Jean Claude VD"
 
     def use_special(self, target):
         print(f"{self.unit_type} crache des meringues toxiques surn{target.unit_type} !")
@@ -428,19 +425,19 @@ class SucetteVolante(Unit):
             walk_on_water=True,
             unit_type="Sucette Volante",
             speed=10, 
-            attack_power=3,
+            attack_power=4,
             defense=1
         )
-        self.attaque_description = "Description"
-        self.special1_description = "Description"
-        self.spacial2_description = "Description"
+        self.attaque_description = "Coup simple"
+        self.special1_description = "Coup d'aile"
+        self.special2_description = "Paquet de sucettes explosives volantes"
 
     def use_special(self, target):
         print(f"{self.unit_type} inflige un coup d'aile sur {target.unit_type} !")
-        self.attack(target, is_special=False, coeff_attaque=1)
+        self.attack(target, is_special=True, coeff_attaque=2)
     def use_special2(self,game):
         #avion bombardier
-        x,y = 4,4        
+        x,y = 9,9        
         c = False
         while (not c):
             for event in pygame.event.get():
@@ -449,10 +446,7 @@ class SucetteVolante(Unit):
                     exit()
 
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
-                        pygame.quit()
-                        exit()
-                    elif event.key == pygame.K_LEFT and x > 0:
+                    if event.key == pygame.K_LEFT and x > 0:
                         x -= 1
                     elif event.key == pygame.K_RIGHT and x < GRID_SIZE - 1:
                         x += 1
@@ -464,12 +458,14 @@ class SucetteVolante(Unit):
                     for i in range(len(game.map)):
                         for j in range(len(game.map[0])):
                             a,b = i - x, j - y
-                            if (abs(a) == abs(b)) and (abs(a) + abs(b)) < 10:
+                            if (abs(a) == abs(b)) and (abs(a) + abs(b)) < 4:
                                 tile_rect = pygame.Rect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE)
                                 pygame.draw.rect(game.screen, RED, tile_rect)
                     pygame.display.flip()
                     if event.key == pygame.K_SPACE:
                         c = True
+
+        # a revoir !
         for enemy in game.player_team.units:
             if (x == enemy.x and abs(y - enemy.y) < 4) or (enemy.y == y and abs(enemy.x - x) < 4):
                 enemy.health -= 3
