@@ -39,7 +39,7 @@ class Unit:
         self.defense = defense  # Réduction des dégâts
         self.is_selected = False # est selectionné ?
         self.max_health = health # Vie maximale pour dessiner une barre de vie
-        self.max_speed = 6 # Vitesse maximale pour limiter les déplacements
+        self.max_speed = 10 # Vitesse maximale pour limiter les déplacements
         self.min_speed = 1 # Vitesse minimal pour pouvoir se deplacer dans tout les cas
         self.sp = 0 # Points sur la barre spéciale
         self.is_active = False  # Ajout de cet attribut
@@ -145,23 +145,26 @@ class HamsterGangster(Unit):
             x=x,
             y=y,
             team="player",
-            health=15,
+            health=10,
             walk_on_wall=False,
             walk_on_water=False,
             unit_type="Hamster Gangster",
-            speed=6, 
+            speed=5, 
             attack_power=3,
-            defense=0
+            defense=1
         )
         self.attaque_description = "Morsure"
         self.special1_description = "Tire avec son Ak-noisettes"
         self.special2_description = "Nut Barrage : multiplie les dégats \n et réduit de 1 la défense des ennemis"
 
-    def use_special(self, target):
+    def use_special(self, targets, game):
         """
         Utilise la compétence spéciale du Hamster Gangster : "ak-noisettes".
         """
-        self.attack(target, is_special=True, coeff_attaque=1.5)
+        if not isinstance(targets, list):
+            targets = [targets]  # Encapsule la cible unique dans une liste.
+        for target in targets:
+            self.attack(target, is_special=True, coeff_attaque=1.5)
 
     def use_special2(self,game):
         """
@@ -194,13 +197,13 @@ class JusOrange(Unit):
             x=x,
             y=y,
             team="player",
-            health=15,
+            health=10,
             walk_on_wall=False,
             walk_on_water=False,
             unit_type="Jus orange",
-            speed=10, 
+            speed=4, 
             attack_power=2,
-            defense= 4
+            defense= 2
         )
         self.attaque_description = "Coup de paille"
         self.special1_description = "Soigne ses alliés aléatoirement de 2 à 5 HP !"
@@ -210,6 +213,8 @@ class JusOrange(Unit):
         """
         Utilise la compétence spéciale du Jus d'Orange: "soigne les alliés entre 2 et 5 HP".
         """
+        if not isinstance(targets, list):
+            targets = [targets]  # Encapsule la cible unique dans une liste.
         for ally in targets:
             if abs(self.x - ally.x) <= 1 and abs(self.y - ally.y) <= 1:
                 r = random.randint(2, 5)
@@ -221,7 +226,11 @@ class JusOrange(Unit):
         Utilise la compétence légendaire du Jus d'Orange: "Soigne/pulvérise de 1 à 3 aléatoirement".
         """
         for ally in game.player_team.units:
-           if abs(self.x - ally.x) <= 1 and abs(self.y - ally.y) <= 1:
+           
+           if ally == 'Jus orange':
+               pass
+           
+           elif abs(self.x - ally.x) <= 1 and abs(self.y - ally.y) <= 1:
                 r = random.randint(1, 3)
                 ally.health += r 
                 game.action_messages.append(f"{self.unit_type} soigne {ally.unit_type} de {r} pv !")
@@ -244,11 +253,11 @@ class BananePlanteur(Unit):
             x=x,
             y=y,
             team="player",
-            health=15,
+            health=10,
             walk_on_wall=False,
             walk_on_water=True,
             unit_type="Banane Planteur",
-            speed=10, 
+            speed=5, 
             attack_power=3,
             defense=1
         )
@@ -256,12 +265,15 @@ class BananePlanteur(Unit):
         self.special1_description = "Utilise son sabre tropical x1.5"
         self.special2_description = "Bomba : parachute une bombe à distance ! "
 
-    def use_special(self, target,game):
+    def use_special(self, targets,game):
         """
         Utilise la compétence spéciale de la Banane Planteur: "Utilise son sabre tropical x1.5".
         """
-        self.attack(target, is_special=True, coeff_attaque=1.5)
-        game.action_messages.append(f"{self.unit_type} utilise son sabre tropical sur {target.unit_type} !")
+        if not isinstance(targets, list):
+            targets = [targets]  # Encapsule la cible unique dans une liste.
+        for target in targets:
+            self.attack(target, is_special=True, coeff_attaque=1.5)
+            game.action_messages.append(f"{self.unit_type} utilise son sabre tropical sur {target.unit_type} !")
 
     def use_special2(self,game):
         """
@@ -312,31 +324,37 @@ class BonbonContaminé(Unit):
             x=x,
             y=y,
             team="enemy",
-            health=15,
+            health=10,
             walk_on_wall=False,
             walk_on_water=True,
             unit_type="Bonbon Contaminé",
-            speed=10, 
-            attack_power=6,
-            defense=2
+            speed=4, 
+            attack_power=4,
+            defense=0
         )
         self.attaque_description = "Coup de poing"
         self.special1_description = "Coup carambarisé x2"
         self.special2_description = "Explosion sucrée: soigne ses alliés \n et contamine ses enemis"
 
-    def use_special(self, target, game):
+    def use_special(self, targets, game):
         """
         Utilise la compétence spéciale du Bonbon Contaminé: "Coup carambarisé x2".
         """
-        self.attack(target, is_special=True, coeff_attaque=2)
-        game.action_messages.append(f"{self.unit_type} explose {target.unit_type} !")
+        if not isinstance(targets, list):
+            targets = [targets]  # Encapsule la cible unique dans une liste.
+
+        for target in targets:
+            self.attack(target, is_special=True, coeff_attaque=1.5)
+            game.action_messages.append(f"{self.unit_type} explose {target.unit_type} !")
 
     def use_special2(self, game):
         """
         Utilise la compétence légendaire du Bonbon Contaminé: "Explosion sucrée: soigne ses alliés \n et contamine ses enemis".
         """  
         for ally in game.enemy_team.units:
-           if abs(self.x - ally.x) <= 1 and abs(self.y - ally.y) <= 1:
+           if ally == "Bonbon Contaminé":
+               pass
+           elif abs(self.x - ally.x) <= 1 and abs(self.y - ally.y) <= 1:
                 r = random.randint(1, 3)
                 ally.health += r 
                 game.action_messages.append(f"{self.unit_type} soigne {ally.unit_type} de {r} pv !")
@@ -359,24 +377,28 @@ class MeringuichToxique(Unit):
             x=x,
             y=y,
             team="enemy",
-            health=15,
+            health=10,
             walk_on_wall=False,
             walk_on_water=True,
             unit_type="Meringuich Toxique",
-            speed=10, 
-            attack_power=3,
-            defense=1
+            speed=5, 
+            attack_power=2,
+            defense=2
         )
         self.attaque_description = "Coup de chantilly"
         self.special1_description = "Craache des meringues toxiques"
         self.special2_description = "Coup de pied de Jean Claude VD"
 
-    def use_special(self, target, game):
+    def use_special(self, targets, game):
         """
         Utilise la compétence spéciale de Meringuich Toxique: "Crache des meringues toxiques".
         """
-        self.attack(target, is_special=True, coeff_attaque=1.5)
-        game.action_messages.append(f"{self.unit_type} crache des meringues toxiques surn{target.unit_type} !")
+        if not isinstance(targets, list):
+            targets = [targets]  # Encapsule la cible unique dans une liste.
+
+        for target in targets:
+            self.attack(target, is_special=True, coeff_attaque=1.5)
+            game.action_messages.append(f"{self.unit_type} crache des meringues toxiques surn{target.unit_type} !")
 
 
     def use_special2(self, game):
@@ -415,24 +437,27 @@ class SucetteVolante(Unit):
             x=x,
             y=y,
             team="enemy",
-            health=15,
-            walk_on_wall=True,
+            health=10,
+            walk_on_wall=True,  # Peut traverser les murs
             walk_on_water=True,
             unit_type="Sucette Volante",
-            speed=10, 
-            attack_power=4,
+            speed=5, 
+            attack_power=3,
             defense=1
         )
         self.attaque_description = "Coup simple"
         self.special1_description = "Coup d'aile"
         self.special2_description = "Paquet de sucettes explosives volantes"
 
-    def use_special(self, target,game):
+    def use_special(self, targets,game):
         """
         Utilise la compétence spéciale de la Sucette Volante: "Coup d'aile".
         """
-        self.attack(target, is_special=True, coeff_attaque=2)
-        game.action_messages.append(f"{self.unit_type} inflige un coup d'aile sur {target.unit_type} !")
+        if not isinstance(targets, list):
+            targets = [targets]  # Encapsule la cible unique dans une liste.
+        for target in targets:
+            self.attack(target, is_special=True, coeff_attaque=2)
+            game.action_messages.append(f"{self.unit_type} inflige un coup d'aile sur {target.unit_type} !")
 
     def use_special2(self,game):
         """
@@ -464,12 +489,12 @@ class SucetteVolante(Unit):
                                 tile_rect = pygame.Rect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE)
                                 pygame.draw.rect(game.screen, RED, tile_rect)
                     pygame.display.flip()
-                    if event.key == pygame.K_SPACE:
+                    if event.key == pygame.K_RETURN:
                         c = True
 
         # a revoir !
         for enemy in game.player_team.units:
-            if (x == enemy.x and abs(y - enemy.y) < 4) or (enemy.y == y and abs(enemy.x - x) < 4):
+            if (x == enemy.x and abs(y - enemy.y) < 6) or (enemy.y == y and abs(enemy.x - x) < 6):
                 enemy.health -= 3
                 if enemy.health <= 0:
                     game.player_team.remove_dead_units()

@@ -30,9 +30,38 @@ ils devront abattre les zombibonbons et rétablir la paix dans le monde de Pierr
 ## **Technologies utilisées**
 - **Langage** : Python 3.x
 - **Bibliothèque graphique** : Pygame
-- **Gestion des fichiers** : Organisation modulaire avec des fichiers séparés pour les personnages, les cases, et la logique du jeu.
+- **Gestion des fichiers** : Organisation modulaire avec des fichiers séparés pour les personnages, les cases, la map, et la logique du jeu.
 
 ---
 
 ## **Comment jouer ?**
-...
+
+- **Objectif du jeu** :  
+  Chaque joueur doit éliminer les unités adverses en utilisant des déplacements stratégiques, des attaques spécifiques, et en tirant parti des cases spéciales de la carte. Le joueur 1 contrôle l'équipe des héros, tandis que le joueur 2 dirige les zombibonbons.
+
+### **Commandes :**
+
+- **Joueur 1 (Héros)** :  
+  - **Déplacement** :  
+    - Utilisez les touches **Z** (haut), **Q** (gauche), **S** (bas), **D** (droite).  
+  - **Valider un déplacement ou une attaque** :  
+    - Appuyez sur **ESPACE**.  
+  - **Choisir une attaque** :  
+    - Appuyez sur **A** (ne rien faire), **E** (attaque simple), **R** (attaque spéciale), ou **T** (attaque légendaire).  
+
+- **Joueur 2 (Zombibonbons)** :  
+  - **Déplacement** :  
+    - Utilisez les **flèches directionnelles** (haut, bas, gauche, droite).  
+  - **Valider un déplacement ou une attaque** :  
+    - Appuyez sur **ENTRER**.  
+  - **Choisir une attaque** :  
+    - Appuyez sur **U** (ne rien faire), **I** (attaque simple), **O** (attaque spéciale), ou **P** (attaque légendaire).  
+
+### **Conditions de victoire :**
+
+- **Pour le joueur 1 (Héros)** :  
+  - Éliminez toutes les unités de l'équipe des zombibonbons avant que vos propres unités ne soient vaincues.  
+
+- **Pour le joueur 2 (Zombibonbons)** :  
+  - Détruisez toutes les unités de l'équipe des héros avant de perdre vos propres zombibonbons.
+

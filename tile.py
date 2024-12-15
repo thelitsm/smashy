@@ -47,7 +47,6 @@ class Miel(AbstractTile):
         """
         Bloque le mouvement de l'unité pour ce tour.
         """
-        print(f"{unit.unit_type} est bloqué sur une case de miel !")
         unit.moves = 0  # Réduit les mouvements restants à 0
         unit.health -= 2 # Enlève deux points de vie 
 
@@ -64,10 +63,7 @@ class Vitesse(AbstractTile):
             speed_before = unit.speed
             unit.speed = min(speed_before + speed_modifier, unit.max_speed)  # Limite la vitesse
             unit.speed = max(speed_before + speed_modifier, unit.min_speed) #Garantit au moins une vitesse de 1
-            print(f"{unit.unit_type} a gagné {speed_modifier} et est mtn a {unit.speed} et au cs as ou {unit.max_speed}")
-        else :
-            print("t'as deja la  vitesse max ja7ech")
-
+            
 class Eau(AbstractTile):
     def __init__(self, x, y, tile_type, is_walkable, image_path):
         super().__init__(x=x, y=y, tile_type='eau', is_walkable=True, image_path='assets/cases/eau.png')

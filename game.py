@@ -266,7 +266,7 @@ class Game:
                 return True
             # Vérifie si la case est franchissable
             actual_tile=self.map[y][x]
-            if not actual_tile.walkable:  # Accès à la matrice de la carte
+            if actual_tile.tile_type == 'mur' and not actual_unit.walk_on_wall:
                 return True
             if actual_tile.tile_type == 'eau' and actual_unit.unit_type not in actual_tile.allowed_characters :
                 return True
@@ -362,6 +362,8 @@ class Game:
     
     def handle_player_turn(self):
         for selected_unit in self.player_team.units:
+            if self.enemy_team.is_defeated():
+                return
             # Définir le personnage comme actif
             selected_unit.is_active = True
             has_acted = False
@@ -406,16 +408,16 @@ class Game:
 
                         # Effectuer une attaque
                         if event.key == pygame.K_SPACE or selected_unit.moves == 0:  #ceci marque la fin du deplacement
-                            #self.action_messages = [] 
-                            # tile_rect = pygame.Rect(800, 10, CELL_SIZE * 12, CELL_SIZE * 5)
-                            # pygame.draw.rect(self.screen, BLACK, tile_rect)
-                            # pygame.display.flip()
-                            #self.flip_display()
+                            self.action_messages = [] 
+                            tile_rect = pygame.Rect(800, 10, CELL_SIZE * 12, CELL_SIZE * 5)
+                            pygame.draw.rect(self.screen, BLACK, tile_rect)
+                            pygame.display.flip()
+                            self.flip_display()
                             selected_unit.moves = 0
                             choice = -1
-                            # tile_rect = pygame.Rect(800, 10, CELL_SIZE * 10, CELL_SIZE * 5)
-                            # pygame.draw.rect(self.screen, BLACK, tile_rect)
-                            # pygame.display.flip()
+                            tile_rect = pygame.Rect(800, 10, CELL_SIZE * 10, CELL_SIZE * 5)
+                            pygame.draw.rect(self.screen, BLACK, tile_rect)
+                            pygame.display.flip()
                             self.action_messages.append(f" ")
                             self.action_messages.append("Choisissez une attaque :")
                             self.action_messages.append(f"A : ne rien faire")
@@ -467,7 +469,7 @@ class Game:
                                             self.action_messages.append(f"{enemy.unit_type} est vaincu !")
                             elif (choice == 2):#attaque speciale 1
                                 selected_unit.sp -= 4
-                                if selected_unit.unit_type == "Jus orange":
+                                if selected_unit.unit_type == "Banane Planteur":
                                     selected_unit.use_special(self.player_team.units,self)
                                     self.action_messages.append(f"{selected_unit.unit_type} a lancé sa bomba !")
                                 else :
@@ -475,7 +477,7 @@ class Game:
                                         if abs(selected_unit.x - enemy.x) <= 1 and abs(selected_unit.y - enemy.y) <= 1:
                                             damage = max(0, selected_unit.attack_power - enemy.defense)
                                             #selected_unit.use_special(enemy, False, 1)
-                                            selected_unit.use_special(enemy)
+                                            selected_unit.use_special(enemy,self)
                                             self.action_messages.append(f"{selected_unit.unit_type} attaque {enemy.unit_type} pour {damage} dégâts !")
                                             self.message_timer = pygame.time.get_ticks() + 3000
                                             if enemy.health <= 0:
@@ -491,6 +493,8 @@ class Game:
 
     def handle_player2_turn(self):
         for selected_unit in self.enemy_team.units:
+            if self.player_team.is_defeated():
+                return
             # Définir le personnage comme actif
             selected_unit.is_active = True
             has_acted = False
@@ -596,15 +600,14 @@ class Game:
                                             self.action_messages.append(f"{enemy.unit_type} est vaincu !")
                             elif (choice == 2):#attaque speciale 1
                                 selected_unit.sp -= 4
-                                if selected_unit.unit_type == "Jus orange":
+                                if selected_unit.unit_type == "Bonbon Contaminé":
                                     selected_unit.use_special(self.enemy_team.units,self)
-                                    self.action_messages.append(f"{enemy.unit_type} a lancé sa bomba !")
                                 else :
                                     for enemy in self.player_team.units:
                                         if abs(selected_unit.x - enemy.x) <= 1 and abs(selected_unit.y - enemy.y) <= 1:
                                             damage = max(0, selected_unit.attack_power - enemy.defense)
                                             #selected_unit.use_special(enemy, False, 1)
-                                            selected_unit.use_special(enemy)
+                                            selected_unit.use_special(enemy,self)
                                             self.action_messages.append(f"{selected_unit.unit_type} attaque {enemy.unit_type} pour {damage} dégâts !")
                                             self.message_timer = pygame.time.get_ticks() + 3000
                                             if enemy.health <= 0:
@@ -844,9 +847,9 @@ def main():
         if game.player_team.is_defeated() or game.enemy_team.is_defeated():
             # Gagnant
             if game.player_team.is_defeated():
-                winner = "Player2"
+                winner = "Zombibonbons"
             else:
-                winner = "Player1"
+                winner = "Super-Heros"
 
             # Afficher l'écran de fin
             game.show_end_screen(winner)
